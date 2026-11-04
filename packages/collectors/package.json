@@ -1,0 +1,14 @@
+{
+  "name": "@radar/collectors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fx": "tsx --env-file-if-exists=../../.env src/fx.ts"
+  },
+  "dependencies": {
+    "@radar/core": "^0.1.0",
+    "@radar/db": "^0.1.0",
+    "drizzle-orm": "^0.45.4"
+  }
+}

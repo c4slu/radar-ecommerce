@@ -1,0 +1,264 @@
+import {
+  boolean,
+  date,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+const id = () => uuid("id").primaryKey().defaultRandom();
+const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
+const money = (name: string) => numeric(name, { precision: 12, scale: 2, mode: "number" });
+const fraction = (name: string) => numeric(name, { precision: 6, scale: 4, mode: "number" });
+
+export const marketplaceEnum = pgEnum("marketplace", ["mercadolivre", "shopee", "tiktokshop"]);
+export const productStatusEnum = pgEnum("product_status", ["pesquisa", "aprovado", "ativo", "descontinuado"]);
+export const supplierChannelEnum = pgEnum("supplier_channel", ["nacional", "importacao"]);
+export const movementTypeEnum = pgEnum("movement_type", ["entrada", "saida", "ajuste"]);
+export const trendSourceEnum = pgEnum("trend_source", ["google", "ml_trends", "tiktok"]);
+export const jobStatusEnum = pgEnum("job_status", ["running", "success", "error"]);
+
+// ---------- Cadastros ----------
+
+export const suppliers = pgTable("suppliers", {
+  id: id(),
+  name: text("name").notNull(),
+  cnpj: text("cnpj"),
+  contactName: text("contact_name"),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  city: text("city"),
+  state: text("state"),
+  channel: supplierChannelEnum("channel").notNull().default("nacional"),
+  leadTimeDays: integer("lead_time_days"),
+  minOrderValue: money("min_order_value"),
+  rating: smallint("rating"),
+  notes: text("notes"),
+  createdAt: createdAt(),
+});
+
+export const products = pgTable("products", {
+  id: id(),
+  sku: text("sku").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category"),
+  /** id da categoria no Mercado Livre (ex.: MLB1234) para regras de tarifa */
+  mlCategoryId: text("ml_category_id"),
+  weightGrams: integer("weight_grams"),
+  lengthCm: numeric("length_cm", { mode: "number" }),
+  widthCm: numeric("width_cm", { mode: "number" }),
+  heightCm: numeric("height_cm", { mode: "number" }),
+  /** termos usados pelos coletores para buscar concorrentes */
+  searchTerms: text("search_terms").array().notNull().default([]),
+  status: productStatusEnum("status").notNull().default("pesquisa"),
+  notes: text("notes"),
+  createdAt: createdAt(),
+});
+
+export const supplierQuotes = pgTable(
+  "supplier_quotes",
+  {
+    id: id(),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    supplierId: uuid("supplier_id").notNull().references(() => suppliers.id, { onDelete: "cascade" }),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 4, mode: "number" }).notNull(),
+    currency: text("currency").notNull().default("BRL"),
+    minQty: integer("min_qty"),
+    freightTotal: money("freight_total"),
+    otherCostsTotal: money("other_costs_total"),
+    validUntil: date("valid_until"),
+    quotedAt: date("quoted_at").notNull().defaultNow(),
+    notes: text("notes"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("supplier_quotes_product_idx").on(t.productId)],
+);
+
+// ---------- Estoque ----------
+
+export const inventoryLots = pgTable("inventory_lots", {
+  id: id(),
+  productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
+  supplierId: uuid("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
+  quantity: integer("quantity").notNull(),
+  landedUnitCost: numeric("landed_unit_cost", { precision: 12, scale: 4, mode: "number" }).notNull(),
+  receivedAt: date("received_at").notNull().defaultNow(),
+  notes: text("notes"),
+  createdAt: createdAt(),
+});
+
+export const stockMovements = pgTable(
+  "stock_movements",
+  {
+    id: id(),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "restrict" }),
+    lotId: uuid("lot_id").references(() => inventoryLots.id, { onDelete: "set null" }),
+    type: movementTypeEnum("type").notNull(),
+    /** positivo = entra, negativo = sai */
+    quantity: integer("quantity").notNull(),
+    marketplace: marketplaceEnum("marketplace"),
+    unitPrice: money("unit_price"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+    notes: text("notes"),
+  },
+  (t) => [index("stock_movements_product_idx").on(t.productId, t.occurredAt)],
+);
+
+// ---------- Mercado ----------
+
+export const marketListings = pgTable(
+  "market_listings",
+  {
+    id: id(),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    marketplace: marketplaceEnum("marketplace").notNull(),
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    price: money("price").notNull(),
+    soldQuantity: integer("sold_quantity"),
+    reviewsCount: integer("reviews_count"),
+    sellerId: text("seller_id"),
+    sellerName: text("seller_name"),
+    isOfficialStore: boolean("is_official_store").notNull().default(false),
+    isFulfillment: boolean("is_fulfillment").notNull().default(false),
+    url: text("url"),
+    collectedAt: timestamp("collected_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("market_listings_lookup_idx").on(t.productId, t.marketplace, t.collectedAt)],
+);
+
+export const marketSnapshots = pgTable(
+  "market_snapshots",
+  {
+    id: id(),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    marketplace: marketplaceEnum("marketplace").notNull(),
+    day: date("day").notNull(),
+    priceMin: money("price_min"),
+    priceMedian: money("price_median"),
+    priceMax: money("price_max"),
+    priceStddev: money("price_stddev"),
+    listingsCount: integer("listings_count").notNull().default(0),
+    sellersCount: integer("sellers_count").notNull().default(0),
+    officialShare: fraction("official_share"),
+    /** soma de sold_quantity dos anúncios no dia (usada para calcular deltas) */
+    soldTotal: integer("sold_total"),
+  },
+  (t) => [uniqueIndex("market_snapshots_unique").on(t.productId, t.marketplace, t.day)],
+);
+
+export const trendSignals = pgTable(
+  "trend_signals",
+  {
+    id: id(),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+    term: text("term").notNull(),
+    source: trendSourceEnum("source").notNull(),
+    value: numeric("value", { mode: "number" }).notNull(),
+    day: date("day").notNull(),
+    meta: jsonb("meta"),
+  },
+  (t) => [uniqueIndex("trend_signals_unique").on(t.term, t.source, t.day)],
+);
+
+// ---------- Configuração / análise ----------
+
+export const marketplaceFees = pgTable("marketplace_fees", {
+  id: id(),
+  marketplace: marketplaceEnum("marketplace").notNull(),
+  categoryId: text("category_id"),
+  label: text("label"),
+  commissionPct: fraction("commission_pct").notNull(),
+  fixedFee: money("fixed_fee").notNull().default(0),
+  minPrice: money("min_price"),
+  maxPrice: money("max_price"),
+  validFrom: date("valid_from").notNull().defaultNow(),
+  validTo: date("valid_to"),
+});
+
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const riskScores = pgTable(
+  "risk_scores",
+  {
+    id: id(),
+    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    marketplace: marketplaceEnum("marketplace").notNull(),
+    day: date("day").notNull(),
+    score: smallint("score").notNull(),
+    level: text("level").notNull(),
+    suggestedPrice: money("suggested_price"),
+    breakEvenPrice: money("break_even_price"),
+    recommendedLotQty: integer("recommended_lot_qty"),
+    details: jsonb("details").notNull(),
+  },
+  (t) => [uniqueIndex("risk_scores_unique").on(t.productId, t.marketplace, t.day)],
+);
+
+export const alertRules = pgTable("alert_rules", {
+  id: id(),
+  name: text("name").notNull(),
+  /** ex.: { "type": "median_drop", "pct": 0.1, "days": 7 } */
+  config: jsonb("config").notNull(),
+  productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull().default(true),
+  createdAt: createdAt(),
+});
+
+export const alertEvents = pgTable("alert_events", {
+  id: id(),
+  ruleId: uuid("rule_id").references(() => alertRules.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
+
+export const fxRates = pgTable(
+  "fx_rates",
+  {
+    id: id(),
+    /** ex.: USD-BRL */
+    pair: text("pair").notNull(),
+    rate: numeric("rate", { precision: 12, scale: 6, mode: "number" }).notNull(),
+    day: date("day").notNull(),
+  },
+  (t) => [uniqueIndex("fx_rates_unique").on(t.pair, t.day)],
+);
+
+/** Tokens OAuth (ML, Shopee). Acessível só pelo servidor/jobs: RLS bloqueia o resto. */
+export const integrationTokens = pgTable("integration_tokens", {
+  provider: text("provider").primaryKey(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  meta: jsonb("meta"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const jobRuns = pgTable(
+  "job_runs",
+  {
+    id: id(),
+    job: text("job").notNull(),
+    status: jobStatusEnum("status").notNull().default("running"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    itemsProcessed: integer("items_processed"),
+    error: text("error"),
+  },
+  (t) => [index("job_runs_job_idx").on(t.job, t.startedAt)],
+);

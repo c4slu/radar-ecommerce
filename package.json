@@ -1,0 +1,22 @@
+{
+  "name": "radar",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @radar/web",
+    "build": "npm run build -w @radar/web",
+    "test": "npm run test -w @radar/core",
+    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/collectors && npm run typecheck -w @radar/web",
+    "db:generate": "npm run generate -w @radar/db",
+    "db:migrate": "npm run migrate -w @radar/db",
+    "collect:fx": "npm run fx -w @radar/collectors --"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

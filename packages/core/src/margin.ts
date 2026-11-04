@@ -16,6 +16,33 @@ export function landedCost(i: LandedCostInput): number {
   return i.unitPrice + ((i.freightTotal ?? 0) + (i.otherCostsTotal ?? 0)) / i.quantity;
 }
 
+export interface QuoteCostInput {
+  /** preço unitário na moeda da cotação */
+  unitPrice: number;
+  currency: string;
+  /** cotação da moeda em R$ (ignorada se currency = BRL) */
+  fxRate?: number | null;
+  /** quantidade usada para ratear frete e outros custos (ex.: pedido mínimo) */
+  quantity?: number | null;
+  /** frete total do pedido, em R$ */
+  freightTotal?: number | null;
+  /** impostos/taxas totais do pedido, em R$ */
+  otherCostsTotal?: number | null;
+}
+
+/** Custo unitário final em R$ de uma cotação; null se faltar o câmbio. */
+export function quoteLandedCost(q: QuoteCostInput): number | null {
+  const isBrl = q.currency.toUpperCase() === "BRL";
+  if (!isBrl && !q.fxRate) return null;
+  const unitBrl = q.unitPrice * (isBrl ? 1 : q.fxRate!);
+  return landedCost({
+    unitPrice: unitBrl,
+    quantity: q.quantity && q.quantity > 0 ? q.quantity : 1,
+    freightTotal: q.freightTotal ?? 0,
+    otherCostsTotal: q.otherCostsTotal ?? 0,
+  });
+}
+
 export interface SaleContext {
   marketplace: Marketplace;
   feeRules: FeeRule[];

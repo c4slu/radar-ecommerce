@@ -8,7 +8,11 @@ export async function sendMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   if (!supabaseConfigured()) redirect("/login?error=" + encodeURIComponent("Supabase não configurado no .env"));
   // Mesmo comportamento para e-mail não autorizado, sem revelar qual é o permitido.
-  if (!isAllowedEmail(email)) redirect("/login?sent=1");
+  if (!isAllowedEmail(email)) {
+    // aviso só no log do servidor: a tela não revela qual é o e-mail autorizado
+    console.warn(`[login] e-mail fora do ALLOWED_EMAIL, nenhum link enviado: ${email}`);
+    redirect("/login?sent=1");
+  }
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const supabase = await createClient();
@@ -16,7 +20,13 @@ export async function sendMagicLink(formData: FormData) {
     email,
     options: { emailRedirectTo: `${origin}/auth/callback` },
   });
-  if (error) redirect("/login?error=" + encodeURIComponent(error.message));
+  if (error) {
+    const msg =
+      error.code === "over_email_send_rate_limit" || /rate limit/i.test(error.message)
+        ? "Limite de e-mails do Supabase atingido (2 por hora no plano grátis). Tente de novo mais tarde ou configure um SMTP próprio."
+        : error.message;
+    redirect("/login?error=" + encodeURIComponent(msg));
+  }
   redirect("/login?sent=1");
 }
 

@@ -6,11 +6,12 @@ export const metadata: Metadata = { title: "Radar", description: "Fornecedores, 
 
 const NAV = [
   { href: "/", label: "Dashboard" },
+  { href: "/produtos", label: "Produtos" },
+  { href: "/fornecedores", label: "Fornecedores" },
+  { href: "/estoque", label: "Estoque" },
   { href: "/calculadora", label: "Calculadora de risco" },
-  { href: "#", label: "Fornecedores", soon: true },
-  { href: "#", label: "Produtos", soon: true },
-  { href: "#", label: "Estoque", soon: true },
   { href: "#", label: "Pesquisa de mercado", soon: true },
+  { href: "/configuracoes", label: "Configurações" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

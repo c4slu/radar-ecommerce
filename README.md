@@ -3,7 +3,7 @@
 App pessoal para apoiar um e-commerce com estoque próprio (Mercado Livre, Shopee, TikTok Shop):
 fornecedores, cotações, estoque, monitoramento de preços/tendências e **score de risco** por produto.
 
-Plano completo: veja o arquivo de plano aprovado. Status: **Fase 0 (setup) concluída**.
+Plano completo: veja o arquivo de plano aprovado. Status: **Fase 1 (cadastros) concluída**: fornecedores, produtos, cotações, estoque e configurações.
 
 ## Estrutura
 
@@ -29,7 +29,7 @@ Abra http://localhost:3000/calculadora. Sem `.env` o app roda só em modo desenv
 
 1. **Supabase** (supabase.com, plano Free, região São Paulo)
    - Copie `.env.example` para `.env` e preencha `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-     `DATABASE_URL` (Connection string > Transaction pooler, porta 6543) e `ALLOWED_EMAIL`.
+     `DATABASE_URL` (Connect > **Session pooler**, porta 5432) e `ALLOWED_EMAIL`.
    - `npm run db:migrate` para criar as tabelas (a migration inicial já está em `packages/db/migrations`).
    - Database > Extensions: ative **pg_cron**. Depois rode `packages/db/sql/001_after_migrate.sql` no SQL Editor
      (liga RLS, cria agregação diária, limpeza e seeds).
@@ -51,7 +51,7 @@ Abra http://localhost:3000/calculadora. Sem `.env` o app roda só em modo desenv
 
 ## Próximas fases
 
-1. Cadastros: fornecedores (CNPJ via BrasilAPI), produtos, cotações, estoque, tarifas.
+1. ~~Cadastros: fornecedores (CNPJ via BrasilAPI), produtos, cotações, estoque, tarifas.~~ (feito)
 2. Mercado Livre: OAuth, coletor, snapshots, gráficos, tela de pesquisa.
 3. Score diário + alertas no Telegram.
 4. Shopee (API de afiliados), Google Trends, câmbio no custo de importação.

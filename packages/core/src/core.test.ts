@@ -6,6 +6,7 @@ import {
   median,
   pickFeeRule,
   priceForMargin,
+  quoteLandedCost,
   saleBreakdown,
   type FeeRule,
 } from "./index";
@@ -40,6 +41,12 @@ describe("fees", () => {
 describe("margin", () => {
   it("landedCost rateia frete e impostos", () => {
     expect(landedCost({ unitPrice: 10, quantity: 100, freightTotal: 200, otherCostsTotal: 100 })).toBe(13);
+  });
+
+  it("quoteLandedCost converte moeda e rateia custos", () => {
+    expect(quoteLandedCost({ unitPrice: 2, currency: "USD", fxRate: 5, quantity: 100, freightTotal: 300 })).toBe(13);
+    expect(quoteLandedCost({ unitPrice: 10, currency: "BRL", freightTotal: 50 })).toBe(60);
+    expect(quoteLandedCost({ unitPrice: 2, currency: "USD" })).toBeNull();
   });
 
   it("saleBreakdown", () => {
@@ -105,5 +112,22 @@ describe("risk", () => {
     expect(r.score).toBe(50);
     expect(r.components.every((c) => c.missingData)).toBe(true);
     expect(r.explanation[0]).toMatch(/dados faltando/);
+  });
+});
+
+describe("parseLocaleNumber", () => {
+  it("entende formato brasileiro e americano", async () => {
+    const { parseLocaleNumber: p } = await import("./parse");
+    expect(p("1.200")).toBe(1200);
+    expect(p("1.200.000")).toBe(1200000);
+    expect(p("1.234,56")).toBe(1234.56);
+    expect(p("3,20")).toBe(3.2);
+    expect(p("3.20")).toBe(3.2);
+    expect(p("0.5")).toBe(0.5);
+    expect(p("R$ 15")).toBe(15);
+    expect(p("12,5%")).toBe(12.5);
+    expect(p("-1.000")).toBe(-1000);
+    expect(p("")).toBeUndefined();
+    expect(p("abc")).toBeNaN();
   });
 });

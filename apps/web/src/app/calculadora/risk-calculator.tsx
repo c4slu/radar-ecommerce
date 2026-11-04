@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { computeRisk, MARKETPLACES, saleBreakdown, type FeeRule, type Marketplace } from "@radar/core";
+import { computeRisk, MARKETPLACES, parseLocaleNumber, saleBreakdown, type FeeRule, type Marketplace } from "@radar/core";
 
 const brl = (v: number | null | undefined) =>
   v == null || !Number.isFinite(v) ? "-" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -45,7 +45,7 @@ export function RiskCalculator() {
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((s) => ({ ...s, [k]: e.target.value }));
-  const num = (v: string) => Number(v.replace(",", "."));
+  const num = (v: string) => parseLocaleNumber(v) ?? NaN;
 
   const result = useMemo(() => {
     const feeRules: FeeRule[] = [

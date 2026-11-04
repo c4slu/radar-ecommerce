@@ -61,3 +61,10 @@ export async function deleteFee(id: string) {
   await getDb().delete(marketplaceFees).where(eq(marketplaceFees.id, id));
   revalidatePath("/", "layout");
 }
+
+export async function disconnectMl() {
+  await requireUser();
+  const { disconnect } = await import("@radar/ml");
+  await disconnect();
+  revalidatePath("/configuracoes");
+}

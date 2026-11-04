@@ -8,7 +8,7 @@ const rootEnv = path.resolve(process.cwd(), "../../.env");
 if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 const config: NextConfig = {
-  transpilePackages: ["@radar/core", "@radar/db"],
+  transpilePackages: ["@radar/core", "@radar/db", "@radar/ml"],
 };
 
 export default config;

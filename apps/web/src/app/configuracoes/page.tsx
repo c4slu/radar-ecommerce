@@ -5,6 +5,7 @@ import { Badge, EmptyState, Field, PageHeader, SelectField, Td, Th } from "@/com
 import { getSettings } from "@/lib/data";
 import { brl, dateBr, num, pct } from "@/lib/format";
 import { addFee, deleteFee, saveSettings } from "./actions";
+import { MlCard } from "./ml-card";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,8 @@ const INTEGRATIONS = [
   { name: "Mercado Livre", vars: ["ML_CLIENT_ID", "ML_CLIENT_SECRET"], phase: "fase 2" },
 ];
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ml?: string; detalhe?: string }> }) {
+  const { ml, detalhe } = await searchParams;
   const db = getDb();
   const [s, fees, fx] = await Promise.all([
     getSettings(),
@@ -56,6 +58,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="space-y-6">
+          <MlCard status={ml} detail={detalhe} />
           <div className="card">
             <h2 className="mb-3 font-medium">Integrações (.env)</h2>
             <table className="w-full text-sm">

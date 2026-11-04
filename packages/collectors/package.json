@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fx": "tsx --env-file-if-exists=../../.env src/fx.ts"
+    "fx": "tsx --env-file-if-exists=../../.env src/fx.ts",
+    "ml": "tsx --env-file-if-exists=../../.env src/ml.ts"
   },
   "dependencies": {
     "@radar/core": "^0.1.0",
     "@radar/db": "^0.1.0",
+    "@radar/ml": "^0.1.0",
     "drizzle-orm": "^0.45.4"
   }
 }

@@ -10,6 +10,7 @@ import { brl, dateBr, num, pct, unitPrice } from "@/lib/format";
 import { EMPTY_STOCK, getStockSummaries } from "@/lib/stock";
 import { addQuote, deleteProduct, deleteQuote, saveProduct } from "../actions";
 import { ProductForm } from "../product-form";
+import { MarketSection } from "./market-section";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,8 @@ export default async function ProductPage({
         <Kpi label="Valor em estoque" value={brl(stock.stockValue)} />
         <Kpi label="Cobertura" value={stock.coverageDays == null ? "-" : `${Math.round(stock.coverageDays)} dias`} />
       </div>
+
+      <MarketSection productId={id} cost={refCost} hasTerms={product.searchTerms.length > 0} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="card">

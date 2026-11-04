@@ -14,7 +14,12 @@ export async function sendMagicLink(formData: FormData) {
     redirect("/login?sent=1");
   }
 
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  // Endereço do próprio app (local ou Vercel), para o link do e-mail voltar ao lugar certo.
+  // O Supabase só aceita se a URL estiver em Authentication > URL Configuration > Redirect URLs;
+  // caso contrário ele usa o Site URL.
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const origin = h.get("origin") ?? (host ? `${h.get("x-forwarded-proto") ?? "https"}://${host}` : "http://localhost:3000");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,

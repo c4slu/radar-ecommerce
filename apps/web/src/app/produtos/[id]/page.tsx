@@ -11,6 +11,7 @@ import { EMPTY_STOCK, getStockSummaries } from "@/lib/stock";
 import { addQuote, deleteProduct, deleteQuote, saveProduct } from "../actions";
 import { ProductForm } from "../product-form";
 import { MarketSection } from "./market-section";
+import { availableCollectors } from "@/lib/market";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export default async function ProductPage({
     getStockSummaries([id]),
   ]);
   const stock = stockMap.get(id) ?? EMPTY_STOCK;
+  const avail = await availableCollectors();
 
   const quotes = quoteRows
     .map((r) => ({ ...r, cost: quoteLandedCost({ ...r.q, fxRate: fx[r.q.currency], quantity: r.q.minQty }) }))
@@ -75,7 +77,17 @@ export default async function ProductPage({
         <Kpi label="Cobertura" value={stock.coverageDays == null ? "-" : `${Math.round(stock.coverageDays)} dias`} />
       </div>
 
-      <MarketSection productId={id} cost={refCost} hasTerms={product.searchTerms.length > 0} />
+      {(["shopee", "mercadolivre"] as const).map((mp, i) => (
+        <MarketSection
+          key={mp}
+          productId={id}
+          marketplace={mp}
+          cost={refCost}
+          hasTerms={product.searchTerms.length > 0}
+          showCollect={i === 0}
+          available={avail[mp]}
+        />
+      ))}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="card">

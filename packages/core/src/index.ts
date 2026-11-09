@@ -3,3 +3,4 @@ export * from "./fees";
 export * from "./margin";
 export * from "./risk";
 export * from "./parse";
+export * from "./market";

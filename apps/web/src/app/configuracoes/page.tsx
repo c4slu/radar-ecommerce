@@ -15,7 +15,8 @@ const INTEGRATIONS = [
   { name: "Supabase (login)", vars: ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "ALLOWED_EMAIL"], phase: "ativo" },
   { name: "Banco de dados", vars: ["DATABASE_URL"], phase: "ativo" },
   { name: "Telegram (alertas)", vars: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"], phase: "fase 3" },
-  { name: "Mercado Livre", vars: ["ML_CLIENT_ID", "ML_CLIENT_SECRET"], phase: "fase 2" },
+  { name: "Mercado Livre (app)", vars: ["ML_CLIENT_ID", "ML_CLIENT_SECRET"], phase: "busca bloqueada pelo ML" },
+  { name: "Shopee (afiliados)", vars: ["SHOPEE_APP_ID", "SHOPEE_APP_SECRET"], phase: "preços e vendas" },
 ];
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ml?: string; detalhe?: string }> }) {

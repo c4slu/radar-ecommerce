@@ -2,16 +2,18 @@ import Link from "next/link";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { computeRisk, parseLocaleNumber } from "@radar/core";
 import { getDb, trendSignals } from "@radar/db";
-import { listingStats, searchListings, type MlSearchResult } from "@radar/ml";
+import { listingStats, type MarketSearchResult } from "@radar/core";
+import { shopeeConfigured } from "@radar/shopee";
 import { SubmitButton } from "@/components/action-form";
 import { Badge, EmptyState, PageHeader, Td, Th } from "@/components/ui";
 import { getActiveFeeRules, getSettings } from "@/lib/data";
 import { brl, num, pct } from "@/lib/format";
+import { MARKETPLACE_NAME, searchMarket, type SearchMarketplace } from "@/lib/market";
 import { trackTerm } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-type Search = { q?: string; custo?: string; lote?: string; vendas?: string };
+type Search = { q?: string; mp?: string; custo?: string; lote?: string; vendas?: string };
 
 const LEVEL_TONE = { baixo: "green", medio: "amber", alto: "red" } as const;
 
@@ -21,12 +23,13 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
   const cost = parseLocaleNumber(sp.custo);
   const lot = parseLocaleNumber(sp.lote) ?? 100;
   const dailySales = parseLocaleNumber(sp.vendas);
+  const mp: SearchMarketplace = sp.mp === "mercadolivre" || sp.mp === "shopee" ? sp.mp : shopeeConfigured() ? "shopee" : "mercadolivre";
 
-  let result: MlSearchResult | null = null;
+  let result: MarketSearchResult | null = null;
   let error: string | null = null;
   if (q) {
     try {
-      result = await searchListings(q, 50);
+      result = await searchMarket(mp, q);
     } catch (err) {
       error = (err as Error).message;
     }
@@ -35,9 +38,16 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pesquisa de mercado" subtitle="Veja concorrentes, faixa de preço e risco no Mercado Livre antes de cotar um produto." />
+      <PageHeader title="Pesquisa de mercado" subtitle="Veja concorrentes, faixa de preço e risco na Shopee e no Mercado Livre antes de cotar um produto." />
 
-      <form className="card grid gap-3 sm:grid-cols-[1fr_140px_120px_140px_auto] sm:items-end">
+      <form className="card grid gap-3 sm:grid-cols-[150px_1fr_140px_110px_140px_auto] sm:items-end">
+        <label className="block">
+          <span className="label">Marketplace</span>
+          <select name="mp" defaultValue={mp} className="input">
+            <option value="shopee">Shopee</option>
+            <option value="mercadolivre">Mercado Livre</option>
+          </select>
+        </label>
         <label className="block">
           <span className="label">Produto / termo de busca</span>
           <input name="q" defaultValue={q} required className="input" placeholder="garrafa térmica 500ml" />
@@ -60,7 +70,7 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
       {error && (
         <div className="card text-sm text-red-600">
           {error}
-          {/não conectado/i.test(error) && (
+          {/não conectado|não configurada/i.test(error) && (
             <>
               {" "}
               <Link href="/configuracoes" className="underline">
@@ -122,7 +132,7 @@ async function Results({
   dailySales,
 }: {
   q: string;
-  result: MlSearchResult;
+  result: MarketSearchResult;
   cost?: number;
   lot: number;
   dailySales?: number;
@@ -131,12 +141,13 @@ async function Results({
   const [settings, feeRules] = await Promise.all([getSettings(), getActiveFeeRules()]);
   const categories = new Map<string, number>();
   for (const l of result.listings) if (l.categoryId) categories.set(l.categoryId, (categories.get(l.categoryId) ?? 0) + 1);
-  const topCategory = [...categories.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const isMl = result.marketplace === "mercadolivre";
+  const topCategory = isMl ? ([...categories.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null) : null;
 
   const risk =
     cost != null && Number.isFinite(cost) && stats.count > 0
       ? computeRisk({
-          marketplace: "mercadolivre",
+          marketplace: result.marketplace,
           feeRules,
           categoryId: topCategory,
           landedCost: cost,
@@ -164,7 +175,7 @@ async function Results({
         <Kpi label="Menor preço" value={brl(stats.priceMin)} />
         <Kpi label="Mediana" value={brl(stats.priceMedian)} />
         <Kpi label="Maior preço" value={brl(stats.priceMax)} />
-        <Kpi label="Loja oficial / Full" value={pct(stats.officialShare, 0)} />
+        <Kpi label={isMl ? "Loja oficial / Full" : "Mall / Indicado"} value={pct(stats.officialShare, 0)} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -210,13 +221,13 @@ async function Results({
         <div className="card space-y-3 text-sm">
           <h2 className="font-medium">Acompanhar este produto</h2>
           <p className="text-zinc-500">
-            Cria um produto em pesquisa com o termo <strong>{q}</strong>, coleta os concorrentes agora e passa a monitorar a cada 6 horas.
+            Cria um produto em pesquisa com o termo <strong>{q}</strong>, coleta os concorrentes agora nos marketplaces configurados e passa a monitorar a cada 6 horas.
           </p>
           <form action={trackTerm.bind(null, q, topCategory)}>
             <SubmitButton label="Acompanhar" />
           </form>
           <p className="text-xs text-zinc-400">
-            Fonte: {result.source === "search" ? "busca do Mercado Livre" : "catálogo do Mercado Livre"}
+            Fonte: {MARKETPLACE_NAME[result.marketplace]} ({result.source === "search" ? "busca" : result.source === "catalog" ? "catálogo" : "API de afiliados"})
             {topCategory && ` · categoria ${topCategory}`}
           </p>
         </div>
@@ -254,8 +265,8 @@ async function Results({
                   <Td className="text-zinc-500">{l.sellerName ?? l.sellerId ?? "-"}</Td>
                   <Td>
                     <div className="flex gap-1">
-                      {l.isOfficialStore && <Badge tone="blue">oficial</Badge>}
-                      {l.isFulfillment && <Badge tone="green">full</Badge>}
+                      {l.isOfficialStore && <Badge tone="blue">{isMl ? "oficial" : "mall"}</Badge>}
+                      {l.isFulfillment && <Badge tone="green">{isMl ? "full" : "indicado"}</Badge>}
                       {l.freeShipping && <Badge>frete grátis</Badge>}
                     </div>
                   </Td>

@@ -3,11 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getDb, products } from "@radar/db";
-import { collectMarketListings } from "@radar/ml";
 import { requireUser } from "@/lib/auth";
+import { collectAll } from "@/lib/market";
 
 /** Cria um produto "em pesquisa" a partir do termo pesquisado e já coleta os concorrentes. */
-export async function trackTerm(term: string, categoryId: string | null) {
+export async function trackTerm(term: string, mlCategoryId: string | null) {
   await requireUser();
   const clean = term.trim();
   const base = clean
@@ -20,9 +20,9 @@ export async function trackTerm(term: string, categoryId: string | null) {
   const sku = `PESQ-${base}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
   const [row] = await getDb()
     .insert(products)
-    .values({ sku, name: clean, searchTerms: [clean], status: "pesquisa", mlCategoryId: categoryId })
+    .values({ sku, name: clean, searchTerms: [clean], status: "pesquisa", mlCategoryId })
     .returning({ id: products.id });
-  await collectMarketListings([row!.id]).catch(() => null);
+  await collectAll([row!.id]).catch(() => null);
   revalidatePath("/produtos");
   redirect(`/produtos/${row!.id}`);
 }

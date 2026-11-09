@@ -97,7 +97,8 @@ async function saveToken(t: TokenResponse, meta: Record<string, unknown>, db = g
     meta,
     updatedAt: new Date(),
   };
-  await db.insert(integrationTokens).values(row).onConflictDoUpdate({ target: integrationTokens.provider, set: row });
+  const { provider: _p, ...update } = row;
+  await db.insert(integrationTokens).values(row).onConflictDoUpdate({ target: integrationTokens.provider, set: update });
 }
 
 // ---------- Uso do token ----------

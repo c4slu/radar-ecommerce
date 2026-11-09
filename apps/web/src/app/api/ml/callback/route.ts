@@ -29,6 +29,15 @@ export async function GET(request: NextRequest) {
     const { nickname } = await exchangeCode(code, mlRedirectUri(request.nextUrl.origin), saved.verifier);
     return back("ok", nickname);
   } catch (err) {
-    return back("erro", (err as Error).message);
+    // Erros do Drizzle trazem a query e os parâmetros (que incluem o token) na mensagem:
+    // nunca devolver isso na URL. Mostra só a causa e registra o resto no log do servidor.
+    const cause = (err as { cause?: { message?: string; code?: string } }).cause;
+    console.error("[ml/callback] falha ao conectar:", cause?.code, cause?.message ?? (err as Error).message.split("\n")[0]);
+    const detail = cause?.message
+      ? `erro no banco: ${cause.message}`
+      : (err as Error).message.startsWith("Failed query")
+        ? "erro ao gravar no banco"
+        : (err as Error).message;
+    return back("erro", detail);
   }
 }

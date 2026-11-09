@@ -91,17 +91,16 @@ export async function deleteQuote(productId: string, quoteId: string) {
   revalidatePath(`/produtos/${productId}`);
 }
 
-/** Botão "Coletar agora": busca os concorrentes do produto no ML imediatamente. */
+/** Botão "Coletar agora": busca concorrentes do produto em todos os marketplaces disponíveis. */
 export async function collectNow(productId: string, _prev: ActionState, _fd: FormData): Promise<ActionState> {
   await requireUser();
-  const { collectMarketListings } = await import("@radar/ml");
-  try {
-    const r = await collectMarketListings([productId]);
-    revalidatePath(`/produtos/${productId}`);
-    if (r.errors.length) return { error: r.errors[0] };
-    if (r.products === 0) return { error: "Produto descontinuado não é coletado. Mude o status para coletar." };
-    return { ok: `${r.listings} anúncios coletados` };
-  } catch (err) {
-    return { error: (err as Error).message };
-  }
+  const { collectAll } = await import("@/lib/market");
+  const [p] = await getDb().select({ status: products.status }).from(products).where(eq(products.id, productId));
+  if (p?.status === "descontinuado") return { error: "Produto descontinuado não é coletado. Mude o status para coletar." };
+  const { avail, lines } = await collectAll([productId]);
+  revalidatePath(`/produtos/${productId}`);
+  if (!avail.shopee && !avail.mercadolivre)
+    return { error: "Nenhum marketplace configurado: conecte o Mercado Livre ou configure a Shopee em Configurações." };
+  const text = lines.map((l) => `${l.mp}: ${l.text}`).join(" · ");
+  return lines.some((l) => l.ok) ? { ok: text } : { error: text };
 }

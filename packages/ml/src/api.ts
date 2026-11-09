@@ -1,3 +1,4 @@
+import type { MarketListing, MarketSearchResult } from "@radar/core";
 import { getAccessToken, MlError } from "./auth";
 
 const API = "https://api.mercadolibre.com";
@@ -17,29 +18,19 @@ export async function mlGet<T>(path: string, attempt = 0): Promise<T> {
     await new Promise((r) => setTimeout(r, 1500 * 2 ** attempt));
     return mlGet<T>(path, attempt + 1);
   }
+  if (res.status === 403 && (body as { blocked_by?: string } | null)?.blocked_by === "PolicyAgent") {
+    throw new MlError(
+      `O Mercado Livre bloqueou este recurso para a sua aplicação (${path.split("?")[0]}). ` +
+        "Desde 2025 a busca, o catálogo e as tendências só ficam liberados para aplicações autorizadas pelo ML.",
+      403,
+      body,
+    );
+  }
   throw new MlError(`ML ${res.status} em ${path}: ${JSON.stringify(body)?.slice(0, 300)}`, res.status, body);
 }
 
-/** Anúncio concorrente normalizado (mesmo formato para busca e catálogo). */
-export interface MlListing {
-  externalId: string;
-  title: string;
-  price: number;
-  soldQuantity: number | null;
-  sellerId: string | null;
-  sellerName: string | null;
-  isOfficialStore: boolean;
-  isFulfillment: boolean;
-  freeShipping: boolean;
-  url: string | null;
-  categoryId: string | null;
-}
-
-export interface MlSearchResult {
-  source: "search" | "catalog";
-  total: number;
-  listings: MlListing[];
-}
+export type MlListing = MarketListing;
+export type MlSearchResult = MarketSearchResult;
 
 interface SearchItem {
   id: string;
@@ -63,7 +54,7 @@ export async function searchListings(query: string, limit = 50): Promise<MlSearc
     const r = await mlGet<{ paging: { total: number }; results: SearchItem[] }>(
       `/sites/${SITE}/search?q=${encodeURIComponent(query)}&limit=${Math.min(limit, 50)}`,
     );
-    return { source: "search", total: r.paging.total, listings: r.results.map(fromSearchItem) };
+    return { marketplace: "mercadolivre", source: "search", total: r.paging.total, listings: r.results.map(fromSearchItem) };
   } catch (err) {
     if (!(err instanceof MlError) || err.status !== 403) throw err;
     return searchCatalog(query, limit);
@@ -130,7 +121,7 @@ async function searchCatalog(query: string, limit: number): Promise<MlSearchResu
       if (!(err instanceof MlError) || err.status !== 404) throw err;
     }
   }
-  return { source: "catalog", total: products.paging?.total ?? listings.length, listings: listings.slice(0, limit) };
+  return { marketplace: "mercadolivre", source: "catalog", total: products.paging?.total ?? listings.length, listings: listings.slice(0, limit) };
 }
 
 /** Palavras mais buscadas no ML (geral ou por categoria), em ordem de popularidade. */

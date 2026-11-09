@@ -1,0 +1,22 @@
+name: collect-shopee
+on:
+  schedule:
+    - cron: "45 */6 * * *" # a cada 6h, 30 min depois do ML
+  workflow_dispatch:
+concurrency:
+  group: collect-shopee
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run collect:shopee
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+          SHOPEE_APP_SECRET: ${{ secrets.SHOPEE_APP_SECRET }}

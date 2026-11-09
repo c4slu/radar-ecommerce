@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "fx": "tsx --env-file-if-exists=../../.env src/fx.ts",
-    "ml": "tsx --env-file-if-exists=../../.env src/ml.ts"
+    "ml": "tsx --env-file-if-exists=../../.env src/ml.ts",
+    "shopee": "tsx --env-file-if-exists=../../.env src/shopee.ts"
   },
   "dependencies": {
     "@radar/core": "^0.1.0",
     "@radar/db": "^0.1.0",
     "@radar/ml": "^0.1.0",
+    "@radar/shopee": "^0.1.0",
     "drizzle-orm": "^0.45.4"
   }
 }

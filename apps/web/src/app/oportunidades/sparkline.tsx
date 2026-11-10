@@ -2,7 +2,7 @@
 export function Sparkline({ points, days = 14 }: { points: { day: number; position: number }[]; days?: number }) {
   const w = 96;
   const h = 28;
-  if (points.length < 2) return <span className="text-xs text-zinc-400">{points.length ? "1 dia" : "-"}</span>;
+  if (points.length < 2) return <span className="whitespace-nowrap text-xs text-zinc-400">{points.length ? "1 dia" : "-"}</span>;
   const x = (d: number) => (d / (days - 1)) * (w - 4) + 2;
   const y = (p: number) => ((p - 1) / 19) * (h - 4) + 2;
   const path = points.map((p, i) => `${i ? "L" : "M"}${x(p.day).toFixed(1)},${y(p.position).toFixed(1)}`).join(" ");

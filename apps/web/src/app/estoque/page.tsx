@@ -65,7 +65,7 @@ export default async function StockPage() {
                 return (
                   <tr key={id} className="border-t border-[var(--border)]">
                     <Td>
-                      <Link href={`/produtos/${id}`} className="font-medium hover:underline">
+                      <Link href={`/produtos/${id}`} className="row-link font-medium">
                         {name}
                       </Link>{" "}
                       <span className="font-mono text-xs text-zinc-400">{sku}</span>

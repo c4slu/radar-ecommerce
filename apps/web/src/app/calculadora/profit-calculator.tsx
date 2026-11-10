@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { Zap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { ChevronDown, Zap } from "lucide-react";
 import { calculateProfit, computeRisk, parseLocaleNumber, priceForTargetMargin, type ProfitInput } from "@radar/core";
 import type { CalcFees, CalcProduct } from "@/lib/calculator-data";
 import { fetchCalcProduct, fetchFees } from "./actions";
@@ -49,6 +49,7 @@ export function ProfitCalculator({
   const [price, setPrice] = useState(money(initialProduct?.priceMedian ?? initialProduct?.priceMin) || "");
   const autoCost = initialCost ?? (supplierMatch?.confirmed ? supplierMatch.landedCost : null);
   const [cost, setCost] = useState(money(autoCost) || "");
+  const [costFlash, setCostFlash] = useState(0);
   const [costFrom, setCostFrom] = useState<string | null>(initialCost == null && supplierMatch?.confirmed && supplierMatch.landedCost != null ? supplierMatch.title : null);
   const [type, setType] = useState<ListingType>("classico");
   const [ship, setShip] = useState<ShipMode>("coleta");
@@ -127,6 +128,7 @@ export function ProfitCalculator({
   }, [product, input, fees, type, lot, daily, settings]);
 
   const lotQty = Math.max(0, n(lot));
+  const shownProfit = useTweened(result.profit);
   const tone = result.status === "lucro" ? "emerald" : result.status === "prejuizo" ? "red" : "zinc";
 
   return (
@@ -190,6 +192,7 @@ export function ProfitCalculator({
             onUseCost={(c, o) => {
               setCost(money(c));
               setCostFrom(o.title);
+              setCostFlash((k) => k + 1);
             }}
           />
         )}
@@ -200,6 +203,7 @@ export function ProfitCalculator({
             <MoneyField label="Preço de venda" value={price} onChange={setPrice} onBlur={() => refreshFees(n(price))} />
             <MoneyField
               label="Custo do produto"
+              flashKey={costFlash}
               value={cost}
               onChange={(v) => {
                 setCost(v);
@@ -281,7 +285,7 @@ export function ProfitCalculator({
 
       <div className="space-y-4 lg:sticky lg:top-4">
         {/* 3. Resultado */}
-        <section className={`card space-y-4 border-t-4 ${tone === "emerald" ? "border-t-emerald-400" : tone === "red" ? "border-t-red-400" : "border-t-zinc-300"}`}>
+        <section className={`card space-y-4 border-t-4 transition-[border-color] duration-[var(--dur)] ${tone === "emerald" ? "border-t-emerald-400" : tone === "red" ? "border-t-red-400" : "border-t-zinc-300"}`}>
           <div className="flex items-center justify-between">
             <Chip>Resultado</Chip>
             <Chip tone={tone === "emerald" ? "emerald" : tone === "red" ? "red" : undefined}>
@@ -289,7 +293,13 @@ export function ProfitCalculator({
             </Chip>
           </div>
           <div>
-            <div className={`text-4xl font-bold ${tone === "red" ? "text-red-600" : ""}`}>{brl(result.profit)}</div>
+            <div
+              className={`text-4xl font-bold tabular-nums transition-colors duration-[var(--dur)] ${tone === "red" ? "text-red-600 dark:text-red-400" : ""}`}
+            >
+              {/* o valor animado é visual; leitores de tela recebem o valor final no rótulo abaixo */}
+              <span aria-hidden>{brl(Math.round(shownProfit * 100) / 100)}</span>
+              <span className="sr-only">{brl(result.profit)}</span>
+            </div>
             <div className="text-xs text-zinc-500">lucro por unidade vendida</div>
           </div>
           <div className="grid grid-cols-3 divide-x divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
@@ -298,26 +308,43 @@ export function ProfitCalculator({
             <Metric label="Preço mín." value={brl(result.minPrice)} />
           </div>
           <div className="rounded-xl border border-[var(--border)]">
-            <button type="button" onClick={() => setShowDetail((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium">
+            <button
+              type="button"
+              onClick={() => setShowDetail((v) => !v)}
+              aria-expanded={showDetail}
+              aria-controls="detalhamento-custos"
+              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
+            >
               Detalhamento de custos
-              <span className="text-zinc-500">
-                {brl(result.sellingCosts)} {showDetail ? "▴" : "▾"}
+              <span className="muted flex items-center gap-1">
+                {brl(result.sellingCosts)}
+                <ChevronDown
+                  aria-hidden
+                  className={`h-4 w-4 transition-transform duration-[var(--dur)] ease-[var(--ease-out)] ${showDetail ? "rotate-180" : ""}`}
+                />
               </span>
             </button>
-            {showDetail && (
-              <ul className="space-y-1.5 border-t border-zinc-200 px-4 py-3 text-sm dark:border-zinc-800">
-                {result.lines.map((l) => (
-                  <li key={l.key} className="flex justify-between">
-                    <span className="text-zinc-500">{l.label}</span>
-                    <span>{brl(l.amount)}</span>
+            {/* abre/fecha pela altura da grade (0fr -> 1fr): sem animar height diretamente */}
+            <div
+              id="detalhamento-custos"
+              className={`grid transition-[grid-template-rows] duration-[var(--dur-slow)] ease-[var(--ease-out)] ${showDetail ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+              inert={!showDetail}
+            >
+              <div className="overflow-hidden">
+                <ul className="space-y-1.5 border-t border-[var(--border)] px-4 py-3 text-sm">
+                  {result.lines.map((l) => (
+                    <li key={l.key} className="flex justify-between">
+                      <span className="muted">{l.label}</span>
+                      <span className="tabular-nums">{brl(l.amount)}</span>
+                    </li>
+                  ))}
+                  <li className="flex justify-between border-t border-[var(--border)] pt-1.5 font-medium">
+                    <span>Total</span>
+                    <span className="tabular-nums">{brl(result.totalCosts)}</span>
                   </li>
-                ))}
-                <li className="flex justify-between border-t border-zinc-100 pt-1.5 font-medium dark:border-zinc-800">
-                  <span>Total</span>
-                  <span>{brl(result.totalCosts)}</span>
-                </li>
-              </ul>
-            )}
+                </ul>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/50">
@@ -379,19 +406,29 @@ export function ProfitCalculator({
   );
 }
 
+/**
+ * Botões segmentados com um indicador que desliza até a opção escolhida: a continuidade
+ * mostra que é uma escolha entre alternativas (não botões independentes).
+ */
 function Segmented<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
+  const index = Math.max(0, options.findIndex((o) => o.value === value));
   return (
     <div>
       <div className="mb-1.5 text-sm font-medium">{label}</div>
-      <div className="surface-2 flex gap-1 rounded-xl p-1" role="group" aria-label={label}>
+      <div className="surface-2 relative flex rounded-xl p-1" role="group" aria-label={label}>
+        <span
+          aria-hidden
+          className="segmented-indicator absolute inset-y-1 left-1 rounded-lg bg-[var(--surface)] shadow-sm ring-1 ring-[var(--border)] transition-transform duration-[var(--dur)] ease-[var(--ease-out)]"
+          style={{ width: `calc((100% - 0.5rem) / ${options.length})`, transform: `translateX(${index * 100}%)` }}
+        />
         {options.map((o) => (
           <button
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
             aria-pressed={value === o.value}
-            className={`flex-1 rounded-lg px-2 py-2 text-xs transition sm:text-sm ${
-              value === o.value ? "bg-[var(--surface)] font-medium shadow-sm ring-1 ring-[var(--border)]" : "muted hover:text-[var(--fg)]"
+            className={`relative z-10 flex-1 rounded-lg px-2 py-2 text-xs transition-colors duration-[var(--dur-fast)] sm:text-sm ${
+              value === o.value ? "font-medium text-[var(--fg)]" : "muted hover:text-[var(--fg)]"
             }`}
           >
             {o.label}
@@ -402,11 +439,62 @@ function Segmented<T extends string>({ label, value, onChange, options }: { labe
   );
 }
 
-function MoneyField({ label, value, onChange, onBlur }: { label: string; value: string; onChange: (v: string) => void; onBlur?: () => void }) {
+/** Número que transita até o novo valor (≈220ms). Com movimento reduzido, troca direto. */
+function useTweened(target: number, duration = 220) {
+  const [shown, setShown] = useState(target);
+  const from = useRef(target);
+  useEffect(() => {
+    if (!Number.isFinite(target)) return setShown(target);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = Number.isFinite(from.current) ? from.current : target;
+    // aba oculta: o navegador pausa requestAnimationFrame, então vai direto ao valor final
+    if (reduce || start === target || document.hidden) {
+      from.current = target;
+      return setShown(target);
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const finish = () => {
+      from.current = target;
+      setShown(target);
+    };
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 4); // desaceleração, como --ease-out
+      const v = start + (target - start) * eased;
+      from.current = v;
+      setShown(v);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // segurança: se os quadros pararem no meio (aba trocada), o valor final aparece mesmo assim
+    const safety = window.setTimeout(finish, duration + 80);
+    return () => {
+      cancelAnimationFrame(raf); // interrompível: o próximo valor parte de onde parou
+      window.clearTimeout(safety);
+    };
+  }, [target, duration]);
+  return shown;
+}
+
+function MoneyField({
+  label,
+  value,
+  onChange,
+  onBlur,
+  flashKey,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBlur?: () => void;
+  /** muda quando o valor chega de fora (ex.: custo do fornecedor) para destacar o campo */
+  flashKey?: number;
+}) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      <div className="money-field flex items-center rounded-xl border px-3">
+      <div key={flashKey} className={`money-field flex items-center rounded-xl border px-3 ${flashKey ? "anim-value-flash" : ""}`}>
         <span className="muted text-sm">R$</span>
         <input value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} inputMode="decimal" placeholder="0,00" className="w-full bg-transparent px-2 py-2.5 text-sm outline-none" />
       </div>

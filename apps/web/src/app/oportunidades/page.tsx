@@ -222,7 +222,8 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 function OpportunityCard({ o }: { o: Opportunity }) {
   const r = o.result;
   return (
-    <div className="card card-hover flex flex-col gap-3 p-4">
+    // card inteiro leva ao detalhe (link esticado no título); botões ficam acima do link
+    <div className="card card-hover group relative flex flex-col gap-3 p-4">
       <div className="flex gap-3">
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white">
           {o.pictureUrl ? (
@@ -231,7 +232,10 @@ function OpportunityCard({ o }: { o: Opportunity }) {
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
-          <Link href={`/oportunidades/${o.id}`} className="line-clamp-2 text-sm font-medium hover:underline">
+          <Link
+            href={`/oportunidades/${o.id}`}
+            className="card-link line-clamp-2 text-sm font-medium transition-colors duration-150 group-hover:text-brand-700 dark:group-hover:text-brand-400"
+          >
             {o.name}
           </Link>
           <p className="mt-0.5 truncate text-xs text-zinc-500">{o.categoryPath}</p>
@@ -245,7 +249,11 @@ function OpportunityCard({ o }: { o: Opportunity }) {
       <div className="grid grid-cols-4 gap-2 text-xs">
         <Stat label="Posição" value={`#${o.position}`} />
         <Stat label="Anúncios" value={num(o.listings)} strong={o.listings <= 5} />
-        <Stat label="Preço" value={o.priceMin != null && o.priceMax != null && o.priceMin !== o.priceMax ? `${brl(o.priceMin, 0)}–${brl(o.priceMax, 0)}` : brl(o.priceMin)} />
+        <Stat
+          label="Preço"
+          value={brl(o.priceMin, 0)}
+          sub={o.priceMax != null && o.priceMin != null && o.priceMax !== o.priceMin ? `até ${brl(o.priceMax, 0)}` : undefined}
+        />
         <Stat label="Full" value={pct(o.fullShare, 0)} />
       </div>
 
@@ -260,7 +268,7 @@ function OpportunityCard({ o }: { o: Opportunity }) {
         <Sparkline points={o.positions} />
       </div>
 
-      <div className="mt-auto flex items-center gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+      <div className="above-link mt-auto flex items-center gap-2 border-t border-[var(--border)] pt-3">
         <Link href={`/calculadora?produto=${o.id}`} className="btn">
           Calcular
         </Link>
@@ -268,7 +276,7 @@ function OpportunityCard({ o }: { o: Opportunity }) {
           <SubmitButton label="Acompanhar" variant="secondary" />
         </form>
         {o.permalink && (
-          <a href={o.permalink} target="_blank" rel="noreferrer" className="ml-auto text-xs text-zinc-500 hover:underline">
+          <a href={o.permalink} target="_blank" rel="noreferrer" className="btn-ghost ml-auto px-2 text-xs">
             Ver no ML
           </a>
         )}
@@ -277,11 +285,12 @@ function OpportunityCard({ o }: { o: Opportunity }) {
   );
 }
 
-function Stat({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+function Stat({ label, value, strong, sub }: { label: string; value: string; strong?: boolean; sub?: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="text-xs uppercase tracking-wide text-zinc-400">{label}</div>
-      <div className={`font-medium ${strong ? "text-emerald-600" : ""}`}>{value}</div>
+      <div className={`whitespace-nowrap font-medium ${strong ? "text-emerald-700 dark:text-emerald-400" : ""}`}>{value}</div>
+      {sub && <div className="muted whitespace-nowrap">{sub}</div>}
     </div>
   );
 }

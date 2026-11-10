@@ -56,7 +56,7 @@ export default async function ProductsPage() {
                   <tr key={p.id} className="border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50">
                     <Td className="font-mono text-xs">{p.sku}</Td>
                     <Td>
-                      <Link href={`/produtos/${p.id}`} className="font-medium hover:underline">
+                      <Link href={`/produtos/${p.id}`} className="row-link font-medium">
                         {p.name}
                       </Link>
                     </Td>

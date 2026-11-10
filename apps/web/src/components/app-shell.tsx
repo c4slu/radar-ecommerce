@@ -66,6 +66,15 @@ export function AppShell({
 }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  // saída mais rápida que a entrada: anima e só então desmonta
+  const close = () => {
+    setClosing(true);
+    window.setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 200);
+  };
   // fecha o menu do celular ao navegar
   useEffect(() => setOpen(false), [path]);
   // tela de login sem a moldura do app
@@ -154,9 +163,17 @@ export function AppShell({
       </header>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button type="button" aria-label="Fechar menu" className="absolute inset-0 bg-slate-950/50" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r shadow-xl divider" style={{ background: "var(--surface)" }}>
-            <button type="button" aria-label="Fechar menu" className="btn-ghost absolute right-3 top-3 h-10 w-10 px-0" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            aria-label="Fechar menu"
+            className={`absolute inset-0 bg-slate-950/50 ${closing ? "anim-fade-out" : "anim-fade-in"}`}
+            onClick={close}
+          />
+          <div
+            className={`absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r shadow-xl divider ${closing ? "anim-drawer-out" : "anim-drawer-in"}`}
+            style={{ background: "var(--surface)" }}
+          >
+            <button type="button" aria-label="Fechar menu" className="btn-ghost absolute right-3 top-3 h-10 w-10 px-0" onClick={close}>
               <X className="h-5 w-5" aria-hidden />
             </button>
             {sidebar}

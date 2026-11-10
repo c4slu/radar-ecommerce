@@ -18,9 +18,15 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<Theme | null>(null);
   useEffect(() => setTheme(readTheme()), []);
 
+  const apply = (next: Theme) => document.documentElement.classList.toggle("dark", next === "dark");
+
   const toggle = () => {
     const next: Theme = readTheme() === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
+    // transição cruzada curta entre os temas, quando o navegador suporta e o usuário não pediu menos movimento
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (doc.startViewTransition && !reduce) doc.startViewTransition(() => apply(next));
+    else apply(next);
     try {
       localStorage.setItem(KEY, next);
     } catch {

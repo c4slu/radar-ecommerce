@@ -117,10 +117,14 @@ export function SupplierPanel({
             <p className="muted py-4 text-center text-sm">Nenhuma oferta parecida encontrada. Tente outro termo.</p>
           ) : (
             <ul className="divide-y divide-[var(--border)]">
-              {result.offers.slice(0, 8).map((o) => {
+              {result.offers.slice(0, 8).map((o, i) => {
                 const isConfirmed = confirmed === o.externalId;
                 return (
-                  <li key={`${o.source}-${o.externalId}`} className="flex gap-3 py-3">
+                  <li
+                    key={`${o.source}-${o.externalId}`}
+                    className="anim-rise-in flex gap-3 py-3"
+                    style={{ animationDelay: `${Math.min(i, 7) * 35}ms` }}
+                  >
                     <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-white ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       {o.imageUrl && <img src={o.imageUrl} alt="" className="h-full w-full object-contain" loading="lazy" />}
@@ -161,7 +165,7 @@ export function SupplierPanel({
                       </div>
                       <div className="flex flex-wrap items-center gap-2 pt-1">
                         {onUseCost && o.landedCost != null && (
-                          <button type="button" className="btn h-9 min-h-9 px-3 text-xs" onClick={() => onUseCost(o.landedCost!, o)}>
+                          <button type="button" className="btn h-10 min-h-10 px-3 text-xs" onClick={() => onUseCost(o.landedCost!, o)}>
                             Usar este custo
                           </button>
                         )}
@@ -173,7 +177,7 @@ export function SupplierPanel({
                           ) : (
                             <button
                               type="button"
-                              className="btn h-9 min-h-9 px-3 text-xs"
+                              className="btn h-10 min-h-10 px-3 text-xs"
                               disabled={pending}
                               onClick={() =>
                                 start(async () => {
@@ -191,12 +195,12 @@ export function SupplierPanel({
                               <BadgeCheck className="h-4 w-4" aria-hidden /> Fornecedor confirmado
                             </span>
                           ) : (
-                            <button type="button" className="btn-secondary h-9 min-h-9 px-3 text-xs" onClick={() => confirm(o)} disabled={pending}>
+                            <button type="button" className="btn-secondary h-10 min-h-10 px-3 text-xs" onClick={() => confirm(o)} disabled={pending}>
                               É o mesmo produto
                             </button>
                           ))}
                         {o.url && (
-                          <a href={o.url} target="_blank" rel="noreferrer" className="btn-ghost h-9 min-h-9 px-2 text-xs">
+                          <a href={o.url} target="_blank" rel="noreferrer" className="btn-ghost h-10 min-h-10 px-2 text-xs">
                             Ver <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                           </a>
                         )}

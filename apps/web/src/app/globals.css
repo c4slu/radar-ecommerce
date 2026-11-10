@@ -111,20 +111,121 @@ td {
   color: var(--fg-muted);
 }
 
-/* Foco sempre visível para quem navega pelo teclado */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
-  border-radius: 6px;
+/* Cursor de clique em todo controle: o Tailwind v4 removeu o padrão dos botões */
+:where(button, [role="button"], select, summary, label:has(> input[type="checkbox"]), input[type="checkbox"], input[type="radio"], input[type="file"]):not(:disabled) {
+  cursor: pointer;
+}
+:where(button, select, input):disabled {
+  cursor: not-allowed;
 }
 
+/* Foco sempre visível para quem navega pelo teclado */
+/* em @layer base: assim .input / .money-field (camada components) podem trocar o contorno pelo anel próprio */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* ---------- Movimento ----------
+ * Operate: movimento só para retorno, estado e continuidade. Desaceleração natural,
+ * saída mais rápida que a entrada. Só transform, opacidade e cor.
+ */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms; /* retorno imediato */
+  --dur: 200ms; /* mudança de estado */
+  --dur-slow: 340ms; /* painel, gaveta */
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes drawer-out {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+/* destaque breve do campo que recebeu um valor vindo de outro lugar (ex.: custo do fornecedor) */
+@keyframes value-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-brand-500) 0%, transparent);
+    border-color: var(--color-brand-500);
+    background-color: color-mix(in srgb, var(--color-brand-500) 14%, var(--surface-2));
+  }
+  100% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-brand-500) 0%, transparent);
+  }
+}
+
+.anim-fade-in {
+  animation: fade-in var(--dur) var(--ease-out) both;
+}
+.anim-rise-in {
+  animation: rise-in var(--dur-slow) var(--ease-out) both;
+}
+.anim-drawer-in {
+  animation: drawer-in var(--dur-slow) var(--ease-out) both;
+}
+.anim-drawer-out {
+  animation: drawer-out var(--dur) cubic-bezier(0.4, 0, 1, 1) both;
+}
+.anim-fade-out {
+  animation: fade-out var(--dur) ease-in both;
+}
+.anim-value-flash {
+  animation: value-flash 900ms var(--ease-out);
+}
+
+/* troca de tema: transição cruzada curta (View Transitions) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease-out);
+}
+
+/* Movimento reduzido: tira o deslocamento, mantém opacidade e cor (o retorno das ações continua legível) */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
+  }
+  .anim-rise-in,
+  .anim-drawer-in {
+    animation-name: fade-in;
+  }
+  .anim-drawer-out {
+    animation-name: fade-out;
+  }
+  .segmented-indicator {
+    transition-property: opacity !important;
+  }
+  .btn:active,
+  .btn-secondary:active {
+    transform: none;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
 
@@ -150,17 +251,18 @@ td {
   .input:hover {
     border-color: color-mix(in srgb, var(--fg-muted) 40%, var(--border));
   }
-  .input:focus {
+  .input:focus,
+  .input:focus-visible {
     outline: none;
     border-color: var(--color-brand-500);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-800 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white transition-[background-color,color,transform] duration-150 hover:bg-brand-800 active:bg-brand-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400;
     min-height: 40px;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-[background-color,color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
     min-height: 40px;
     background: var(--surface);
     border-color: var(--border);
@@ -208,8 +310,30 @@ td {
   .table-rows tbody tr {
     @apply transition-colors duration-100;
   }
-  .table-rows tbody tr:hover {
+  /* hover só em linha que leva a algum lugar: destaque = área clicável */
+  .table-rows tbody tr:has(.row-link) {
+    position: relative;
+    cursor: pointer;
+  }
+  .table-rows tbody tr:has(.row-link):hover {
     background: var(--surface-2);
+  }
+  .table-rows tbody tr:has(.row-link):hover .row-link {
+    color: var(--color-brand-700);
+  }
+  .dark .table-rows tbody tr:has(.row-link):hover .row-link {
+    color: var(--color-brand-400);
+  }
+  /* link "esticado": cobre a linha/card inteiro; outros controles ficam acima dele */
+  .row-link::after,
+  .card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .above-link {
+    position: relative;
+    z-index: 1;
   }
   /* células com nome/link (produto, fornecedor) não encolhem a uma palavra por linha no celular:
      a tabela rola dentro do card */

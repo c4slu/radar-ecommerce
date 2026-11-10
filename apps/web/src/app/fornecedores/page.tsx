@@ -44,7 +44,7 @@ export default async function SuppliersPage() {
               {rows.map(({ s, quotes }) => (
                 <tr key={s.id} className="border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50">
                   <Td>
-                    <Link href={`/fornecedores/${s.id}`} className="font-medium hover:underline">
+                    <Link href={`/fornecedores/${s.id}`} className="row-link font-medium">
                       {s.name}
                     </Link>
                   </Td>

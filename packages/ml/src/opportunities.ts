@@ -70,7 +70,13 @@ export async function collectBestsellers(opts: { limitCategories?: number; dryRu
   let cats = opts.dryRun
     ? ROOT_CATEGORIES.filter((r) => r.enabled).map((r) => ({ id: r.id, path: r.id }))
     : await db.select({ id: mlCategories.id, path: mlCategories.path }).from(mlCategories).where(eq(mlCategories.enabled, true));
-  if (!cats.length) throw new Error("Nenhuma categoria em ml_categories: rode a sincronização de categorias primeiro (--sync).");
+  if (!cats.length && !opts.dryRun) {
+    // primeira coleta num banco novo: carrega a árvore de categorias antes
+    log("nenhuma categoria cadastrada: sincronizando a árvore de categorias primeiro");
+    log(`${await syncCategoryTree()} categorias sincronizadas`);
+    cats = await db.select({ id: mlCategories.id, path: mlCategories.path }).from(mlCategories).where(eq(mlCategories.enabled, true));
+  }
+  if (!cats.length) throw new Error("Nenhuma categoria habilitada em ml_categories.");
   if (opts.limitCategories) cats = cats.slice(0, opts.limitCategories);
 
   // 1) rankings

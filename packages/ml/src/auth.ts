@@ -118,6 +118,7 @@ export async function getConnection(): Promise<MlConnection> {
 }
 
 export async function disconnect() {
+  memo = null;
   await getDb().delete(integrationTokens).where(eq(integrationTokens.provider, ML_PROVIDER));
 }
 
@@ -127,7 +128,22 @@ export async function disconnect() {
  * com SELECT ... FOR UPDATE: se o app e um job renovarem ao mesmo tempo, o segundo espera
  * e reaproveita o token novo em vez de queimar o refresh token antigo.
  */
+let memo: { token: string; expiresAt: number } | null = null;
+let inflight: Promise<string> | null = null;
+
 export async function getAccessToken(force = false): Promise<string> {
+  // Cache em memória: a coleta faz milhares de chamadas e não precisa ir ao banco em cada uma.
+  if (!force && memo && memo.expiresAt - Date.now() > REFRESH_MARGIN_MS) return memo.token;
+  // Chamadas simultâneas esperam a mesma leitura/renovação em vez de abrir várias transações.
+  if (!force && inflight) return inflight;
+  const p = loadAccessToken(force).finally(() => {
+    if (inflight === p) inflight = null;
+  });
+  if (!force) inflight = p;
+  return p;
+}
+
+async function loadAccessToken(force: boolean): Promise<string> {
   const db = getDb();
   return db.transaction(async (tx) => {
     const [row] = await tx
@@ -137,7 +153,10 @@ export async function getAccessToken(force = false): Promise<string> {
       .for("update");
     if (!row) throw new MlError("Mercado Livre não conectado. Conecte em Configurações.", 401);
     const fresh = row.expiresAt && row.expiresAt.getTime() - Date.now() > REFRESH_MARGIN_MS;
-    if (fresh && !force) return row.accessToken;
+    if (fresh && !force) {
+      memo = { token: row.accessToken, expiresAt: row.expiresAt!.getTime() };
+      return row.accessToken;
+    }
     if (!row.refreshToken) throw new MlError("Sem refresh token: reconecte o Mercado Livre em Configurações.", 401);
 
     const { clientId, clientSecret } = credentials();
@@ -148,6 +167,7 @@ export async function getAccessToken(force = false): Promise<string> {
       refresh_token: row.refreshToken,
     });
     await saveToken(t, { ...((row.meta as object) ?? {}), refreshedAt: new Date().toISOString() }, tx as unknown as ReturnType<typeof getDb>);
+    memo = { token: t.access_token, expiresAt: Date.now() + t.expires_in * 1000 };
     return t.access_token;
   });
 }

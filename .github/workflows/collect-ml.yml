@@ -4,7 +4,7 @@ on:
     - cron: "15 */6 * * *" # a cada 6h (00:15, 06:15, 12:15, 18:15 UTC)
   workflow_dispatch:
 concurrency:
-  group: collect-ml # nunca duas coletas ao mesmo tempo (o refresh token do ML é de uso único)
+  group: collect-ml # nunca duas coletas do ML ao mesmo tempo (o refresh token é de uso único)
   cancel-in-progress: false
 jobs:
   run:

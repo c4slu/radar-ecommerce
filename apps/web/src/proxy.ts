@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { publicOrigin } from "./lib/origin";
 
 const PUBLIC_PATHS = ["/login", "/auth"];
 
@@ -36,10 +37,8 @@ export async function proxy(request: NextRequest) {
 
   if (!allowed && !isPublic) {
     if (user) await supabase.auth.signOut();
-    const login = request.nextUrl.clone();
-    login.pathname = "/login";
-    login.search = "";
-    return NextResponse.redirect(login);
+    // origem pelos cabeçalhos: no dev o nextUrl vem como localhost mesmo acessando por radar.localtest.me
+    return NextResponse.redirect(new URL("/login", publicOrigin(request)));
   }
   return response;
 }

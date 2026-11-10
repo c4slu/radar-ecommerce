@@ -262,3 +262,89 @@ export const jobRuns = pgTable(
   },
   (t) => [index("job_runs_job_idx").on(t.job, t.startedAt)],
 );
+
+// ---------- Oportunidades (catálogo do Mercado Livre) ----------
+
+/** Árvore de categorias do ML varrida pelo coletor (1º e 2º nível). */
+export const mlCategories = pgTable("ml_categories", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  parentId: text("parent_id"),
+  level: smallint("level").notNull(),
+  path: text("path").notNull(),
+  totalItems: integer("total_items"),
+  enabled: boolean("enabled").notNull().default(true),
+  lastScannedAt: timestamp("last_scanned_at", { withTimezone: true }),
+});
+
+/** Produtos de catálogo que já apareceram nos rankings. */
+export const mlCatalogProducts = pgTable("ml_catalog_products", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  domainId: text("domain_id"),
+  categoryId: text("category_id"),
+  pictureUrl: text("picture_url"),
+  permalink: text("permalink"),
+  catalogCreatedAt: timestamp("catalog_created_at", { withTimezone: true }),
+  firstSeen: date("first_seen").notNull().defaultNow(),
+  lastSeen: date("last_seen").notNull().defaultNow(),
+});
+
+/** Posição diária no ranking de mais vendidos de cada categoria. */
+export const mlBestsellerRanks = pgTable(
+  "ml_bestseller_ranks",
+  {
+    id: id(),
+    productId: text("product_id").notNull(),
+    categoryId: text("category_id").notNull(),
+    day: date("day").notNull(),
+    position: smallint("position").notNull(),
+    /** PRODUCT (catálogo, com detalhe) | ITEM | USER_PRODUCT (sem detalhe: o ML bloqueia) */
+    type: text("type").notNull(),
+  },
+  (t) => [
+    uniqueIndex("ml_bestseller_ranks_unique").on(t.productId, t.categoryId, t.day),
+    index("ml_bestseller_ranks_day_idx").on(t.day, t.categoryId),
+  ],
+);
+
+/** Retrato diário da concorrência de um produto de catálogo. */
+export const mlOfferSnapshots = pgTable(
+  "ml_offer_snapshots",
+  {
+    id: id(),
+    productId: text("product_id").notNull(),
+    day: date("day").notNull(),
+    /** total de anúncios do produto no catálogo (paging.total) */
+    listingsCount: integer("listings_count").notNull(),
+    /** vendedores distintos entre os anúncios lidos (até 50) */
+    sellersCount: integer("sellers_count").notNull(),
+    priceMin: money("price_min"),
+    priceMedian: money("price_median"),
+    priceMax: money("price_max"),
+    fullCount: integer("full_count").notNull().default(0),
+    officialCount: integer("official_count").notNull().default(0),
+    freeShippingShare: fraction("free_shipping_share"),
+    premiumShare: fraction("premium_share"),
+    /** vendedores lidos nesta coleta (até 50) com preço, tipo e logística */
+    offers: jsonb("offers"),
+  },
+  (t) => [uniqueIndex("ml_offer_snapshots_unique").on(t.productId, t.day)],
+);
+
+/** Cache das tarifas oficiais (listing_prices) por categoria, faixa de preço e tipo de anúncio. */
+export const mlFeeCache = pgTable(
+  "ml_fee_cache",
+  {
+    id: id(),
+    categoryId: text("category_id").notNull(),
+    /** preço arredondado para baixo de 10 em 10 (a tarifa muda por faixa) */
+    priceBucket: integer("price_bucket").notNull(),
+    listingTypeId: text("listing_type_id").notNull(),
+    listingTypeName: text("listing_type_name"),
+    percentageFee: numeric("percentage_fee", { precision: 6, scale: 3, mode: "number" }).notNull(),
+    fixedFee: money("fixed_fee").notNull().default(0),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("ml_fee_cache_unique").on(t.categoryId, t.priceBucket, t.listingTypeId)],
+);

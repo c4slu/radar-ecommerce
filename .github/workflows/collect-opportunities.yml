@@ -1,0 +1,34 @@
+name: collect-opportunities
+on:
+  schedule:
+    - cron: "0 8 * * *" # 05:00 de Brasília, todo dia
+    - cron: "0 7 * * 1" # segunda 04:00: atualiza a árvore de categorias antes da coleta
+  workflow_dispatch:
+    inputs:
+      sync:
+        description: "Sincronizar a árvore de categorias"
+        type: boolean
+        default: false
+concurrency:
+  group: collect-ml # mesmo grupo do collect-ml: o refresh token do ML é de uso único
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ML_CLIENT_ID: ${{ secrets.ML_CLIENT_ID }}
+      ML_CLIENT_SECRET: ${{ secrets.ML_CLIENT_SECRET }}
+      DB_POOL_MAX: "4"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: Sincronizar categorias
+        if: github.event.schedule == '0 7 * * 1' || inputs.sync
+        run: npm run collect:opportunities -- --sync
+      - name: Coletar mais vendidos e concorrência
+        if: github.event.schedule != '0 7 * * 1'
+        run: npm run collect:opportunities

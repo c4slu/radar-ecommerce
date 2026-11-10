@@ -55,6 +55,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 hint="Acima disso o giro conta como risco máximo"
               />
             </div>
+            <h3 className="pt-2 text-sm font-medium">Critérios das oportunidades</h3>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Máx. de anúncios" name="oppMaxListings" defaultValue={s.oppMaxListings} inputMode="numeric" hint="o que conta como poucos" />
+              <Field label="Preço de (R$)" name="oppPriceMin" defaultValue={s.oppPriceMin} inputMode="decimal" />
+              <Field label="até (R$)" name="oppPriceMax" defaultValue={s.oppPriceMax} inputMode="decimal" />
+            </div>
           </ActionForm>
         </div>
 

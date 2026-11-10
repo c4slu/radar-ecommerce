@@ -10,6 +10,10 @@ export interface AppSettings {
   coverageDays: number;
   maxDaysToSell: number;
   riskWeights: RiskWeights;
+  /** critérios do dashboard de oportunidades */
+  oppPriceMin: number;
+  oppPriceMax: number;
+  oppMaxListings: number;
 }
 
 const DEFAULTS: AppSettings = {
@@ -19,6 +23,9 @@ const DEFAULTS: AppSettings = {
   coverageDays: 30,
   maxDaysToSell: 90,
   riskWeights: DEFAULT_WEIGHTS,
+  oppPriceMin: 30,
+  oppPriceMax: 300,
+  oppMaxListings: 5,
 };
 
 const KEY_MAP: Record<string, keyof AppSettings> = {
@@ -28,6 +35,9 @@ const KEY_MAP: Record<string, keyof AppSettings> = {
   coverage_days: "coverageDays",
   max_days_to_sell: "maxDaysToSell",
   risk_weights: "riskWeights",
+  opp_price_min: "oppPriceMin",
+  opp_price_max: "oppPriceMax",
+  opp_max_listings: "oppMaxListings",
 };
 export const SETTINGS_KEYS = Object.fromEntries(Object.entries(KEY_MAP).map(([k, v]) => [v, k])) as Record<
   keyof AppSettings,

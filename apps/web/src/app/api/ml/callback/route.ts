@@ -2,12 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { exchangeCode } from "@radar/ml";
 import { requireUser } from "@/lib/auth";
 import { mlRedirectUri } from "@/lib/ml";
+import { publicOrigin } from "@/lib/origin";
 
 /** Retorno do OAuth do Mercado Livre: confere o state, troca o code por tokens e grava. */
 export async function GET(request: NextRequest) {
   await requireUser();
   const back = (status: string, detail?: string) => {
-    const url = new URL("/configuracoes", request.url);
+    const url = new URL("/configuracoes", publicOrigin(request));
     url.searchParams.set("ml", status);
     if (detail) url.searchParams.set("detalhe", detail.slice(0, 200));
     const res = NextResponse.redirect(url);
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     return back("erro", "Sessão de conexão expirada ou inválida. Tente de novo.");
   }
   try {
-    const { nickname } = await exchangeCode(code, mlRedirectUri(request.nextUrl.origin), saved.verifier);
+    const { nickname } = await exchangeCode(code, mlRedirectUri(publicOrigin(request)), saved.verifier);
     return back("ok", nickname);
   } catch (err) {
     // Erros do Drizzle trazem a query e os parâmetros (que incluem o token) na mensagem:

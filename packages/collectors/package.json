@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fx": "tsx --env-file-if-exists=../../.env src/fx.ts",
-    "ml": "tsx --env-file-if-exists=../../.env src/ml.ts",
-    "shopee": "tsx --env-file-if-exists=../../.env src/shopee.ts"
+    "fx": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/fx.ts",
+    "ml": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/ml.ts",
+    "shopee": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/shopee.ts",
+    "opportunities": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/opportunities.ts"
   },
   "dependencies": {
     "@radar/core": "^0.1.0",

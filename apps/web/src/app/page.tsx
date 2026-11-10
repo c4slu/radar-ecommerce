@@ -4,6 +4,7 @@ import { getDb, jobRuns, products, suppliers } from "@radar/db";
 import { Badge, EmptyState, Td } from "@/components/ui";
 import { brl, num } from "@/lib/format";
 import { getStockSummaries } from "@/lib/stock";
+import { loadOpportunities } from "@/lib/opportunities";
 import { supabaseConfigured } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 
@@ -28,7 +29,12 @@ async function loadStats() {
       if (st.coverageDays != null && st.coverageDays < 15)
         lowStock.push({ id, name: names.get(id) ?? "?", days: st.coverageDays, balance: st.balance });
     }
+    // oportunidades: opcional (tabelas podem não existir ainda neste banco)
+    const opps = await loadOpportunities()
+      .then((r) => r.items.filter((o) => o.listings <= 5).sort((a, b) => b.result.score - a.result.score).slice(0, 5))
+      .catch(() => [] as Awaited<ReturnType<typeof loadOpportunities>>["items"]);
     return {
+      opps,
       researching: byStatus.pesquisa?.length ?? 0,
       active: byStatus.ativo?.length ?? 0,
       approved: byStatus.aprovado?.length ?? 0,
@@ -72,6 +78,38 @@ export default async function Dashboard() {
             <Stat label="Ativos" value={num(stats.active)} href="/produtos" />
             <Stat label="Fornecedores" value={num(stats.suppliers)} href="/fornecedores" />
             <Stat label="Capital em estoque" value={brl(stats.stockValue)} href="/estoque" />
+          </div>
+
+          <div className="card">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-medium">Melhores oportunidades hoje</h2>
+              <Link href="/oportunidades" className="text-sm text-zinc-500 hover:underline">
+                ver todas
+              </Link>
+            </div>
+            {stats.opps.length === 0 ? (
+              <EmptyState>Sem dados de oportunidades ainda. Rode a coleta collect-opportunities.</EmptyState>
+            ) : (
+              <table className="w-full text-sm">
+                <tbody>
+                  {stats.opps.map((o) => (
+                    <tr key={o.id} className="border-t border-zinc-100 first:border-0 dark:border-zinc-800">
+                      <Td>
+                        <Link href={`/oportunidades/${o.id}`} className="line-clamp-1 hover:underline">
+                          {o.name}
+                        </Link>
+                      </Td>
+                      <Td right>#{o.position}</Td>
+                      <Td right>{o.listings} anúncios</Td>
+                      <Td right>{brl(o.priceMedian ?? o.priceMin)}</Td>
+                      <Td right className="font-semibold">
+                        {o.result.score}
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">

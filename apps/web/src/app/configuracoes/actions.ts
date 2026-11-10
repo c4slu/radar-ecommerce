@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getDb, marketplaceFees, settings } from "@radar/db";
 import { requireUser } from "@/lib/auth";
 import { SETTINGS_KEYS } from "@/lib/data";
-import { firstError, formObject, zInt, zNumOpt, zPct, type ActionState } from "@/lib/forms";
+import { firstError, formObject, zInt, zNum, zNumOpt, zPct, type ActionState } from "@/lib/forms";
 
 const settingsSchema = z.object({
   taxPct: zPct().refine((v) => v >= 0 && v < 1, "Imposto entre 0 e 100%"),
@@ -14,7 +14,10 @@ const settingsSchema = z.object({
   expectedShare: zPct().refine((v) => v > 0 && v <= 1, "Fatia entre 0 e 100%"),
   coverageDays: zInt().refine((v) => v > 0, "Dias deve ser positivo"),
   maxDaysToSell: zInt().refine((v) => v > 15, "Use mais de 15 dias"),
-});
+  oppMaxListings: zInt().refine((v) => v >= 1, "Máximo de anúncios deve ser 1 ou mais"),
+  oppPriceMin: zNum().refine((v) => v >= 0, "Preço mínimo inválido"),
+  oppPriceMax: zNum().refine((v) => v > 0, "Preço máximo inválido"),
+}).refine((d) => d.oppPriceMax > d.oppPriceMin, "Faixa de preço: o máximo deve ser maior que o mínimo");
 
 export async function saveSettings(_prev: ActionState, fd: FormData): Promise<ActionState> {
   await requireUser();

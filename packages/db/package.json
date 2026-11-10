@@ -12,7 +12,8 @@
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "setup": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/setup.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "dotenv": "^18.0.9",
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15"
   }
 }

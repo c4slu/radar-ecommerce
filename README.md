@@ -25,6 +25,32 @@ npm run dev
 
 Abra http://localhost:3000/calculadora. Sem `.env` o app roda só em modo desenvolvimento, sem login.
 
+## Rodar tudo local (banco de desenvolvimento + login do ML)
+
+Produção (Vercel) e desenvolvimento usam **bancos separados**: o local nunca grava no banco de produção.
+
+1. **Banco dev**: crie um segundo projeto grátis no Supabase (`radar-dev`), ative **pg_cron** em Database > Extensions.
+2. Crie `.env.local` na raiz (ele vence o `.env`; ambos ficam fora do git):
+   ```
+   RADAR_ENV=dev
+   NEXT_PUBLIC_SUPABASE_URL=...        # do radar-dev
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...   # do radar-dev
+   DATABASE_URL=...                    # do radar-dev, Session pooler (porta 5432)
+   ML_REDIRECT_URI=https://radar.localtest.me:3000/api/ml/callback
+   ```
+3. `npm run db:setup` cria as tabelas, funções, RLS, pg_cron e seeds no banco do `.env.local`.
+4. No Supabase dev, Authentication > URL Configuration: Site URL `https://radar.localtest.me:3000` e Redirect URL `https://radar.localtest.me:3000/**`.
+5. No app do Mercado Livre (developers.mercadolivre.com.br), adicione a URI de redirect
+   `https://radar.localtest.me:3000/api/ml/callback` **no mesmo app** que tem a permissão de catálogo.
+   (O ML recusa `localhost`; `radar.localtest.me` é um domínio público que aponta para 127.0.0.1, o seu computador.)
+6. `npm run dev:https` (na primeira vez o Next gera e instala um certificado local; confirme) e abra
+   **`https://radar.localtest.me:3000`** (não use localhost: o login do ML volta para esse endereço). O navegador avisa que o
+   certificado não é deste nome: clique em Avançado > Continuar (só na primeira vez). A barra lateral mostra o selo **DEV**. Em Configurações, conecte o Mercado Livre.
+7. Popule as oportunidades: `npm run collect:opportunities -- --sync` e depois
+   `npm run collect:opportunities -- --limit 10` (ou sem `--limit` para tudo, ~1h).
+
+Se o selo da barra lateral mostrar **LOCAL • banco de produção**, falta o `.env.local`.
+
 ## Configurar os serviços gratuitos
 
 1. **Supabase** (supabase.com, plano Free, região São Paulo)
@@ -48,6 +74,9 @@ Abra http://localhost:3000/calculadora. Sem `.env` o app roda só em modo desenv
 | `npm run typecheck` | checagem de tipos de todos os pacotes |
 | `npm run db:generate` / `db:migrate` | gera / aplica migrations |
 | `npm run collect:fx -- --dry-run` | testa a coleta de câmbio sem gravar |
+| `npm run db:setup` | cria/atualiza tabelas, funções e seeds no banco do .env.local (ou .env) |
+| `npm run dev:https` | app em https://localhost:3000 (necessário para conectar o ML localmente) |
+| `npm run collect:opportunities` | mais vendidos + concorrência no catálogo do ML (`--sync`, `--limit N`, `--dry-run`) |
 
 ## Próximas fases
 

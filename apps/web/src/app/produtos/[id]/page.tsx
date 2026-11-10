@@ -60,10 +60,15 @@ export default async function ProductPage({
         title={product.name}
         subtitle={`SKU ${product.sku}`}
         action={
-          <DeleteButton
-            action={deleteProduct.bind(null, id)}
-            confirmText="Excluir o produto? Se ele já tiver estoque, será só marcado como descontinuado."
-          />
+          <div className="flex items-center gap-3">
+            <Link href={`/calculadora?radar=${id}`} className="btn">
+              Calcular lucro
+            </Link>
+            <DeleteButton
+              action={deleteProduct.bind(null, id)}
+              confirmText="Excluir o produto? Se ele já tiver estoque, será só marcado como descontinuado."
+            />
+          </div>
         }
       />
       {aviso === "descontinuado" && (

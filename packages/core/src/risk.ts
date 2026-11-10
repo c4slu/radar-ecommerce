@@ -64,7 +64,9 @@ export interface RiskResult {
   explanation: string[];
 }
 
-const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+// textos em português: vírgula decimal e milhar com ponto
+const dec = (v: number, d: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v: number) => `${dec(v * 100, 1)}%`;
 
 export function computeRisk(input: RiskInput): RiskResult {
   const weights = { ...DEFAULT_WEIGHTS, ...input.weights };
@@ -95,7 +97,7 @@ export function computeRisk(input: RiskInput): RiskResult {
       ]),
       weight: weights.margin,
       missingData: false,
-      reason: `margem líquida de ${pct(marginAtMedian)} vendendo pela mediana (R$ ${marketMedian.toFixed(2)})`,
+      reason: `margem líquida de ${pct(marginAtMedian)} vendendo pela mediana (R$ ${dec(marketMedian, 2)})`,
     });
   } else components.push(neutral("margin", "sem preços de mercado coletados"));
 
@@ -135,7 +137,7 @@ export function computeRisk(input: RiskInput): RiskResult {
       weight: weights.competition,
       missingData: false,
       reason:
-        `${current} vendedores ativos` +
+        `${current} concorrentes ativos` +
         (growth > 0.05 ? `, crescendo ${pct(growth)} no período` : "") +
         (official > 0.2 ? `, ${pct(official)} lojas oficiais/full` : ""),
     });
@@ -154,7 +156,7 @@ export function computeRisk(input: RiskInput): RiskResult {
       weight: weights.demand,
       missingData: false,
       reason:
-        `~${input.marketDailySales.toFixed(1)} vendas/dia no mercado` +
+        `~${dec(input.marketDailySales, 1)} vendas/dia no mercado` +
         (trend > 0.2 ? ", tendência de alta" : trend < -0.2 ? ", tendência de queda" : ""),
     });
   } else components.push(neutral("demand", "sem estimativa de vendas"));
@@ -196,7 +198,7 @@ export function computeRisk(input: RiskInput): RiskResult {
   if (missing.length) explanation.push(`dados faltando: ${missing.map((c) => c.reason).join("; ")}`);
   if (targetPrice != null && Number.isFinite(marketMedian) && targetPrice > marketMedian)
     explanation.push(
-      `para ter ${pct(targetMargin)} de margem precisaria vender a R$ ${targetPrice.toFixed(2)}, acima da mediana`,
+      `para ter ${pct(targetMargin)} de margem precisaria vender a R$ ${dec(targetPrice, 2)}, acima da mediana`,
     );
 
   return {

@@ -8,6 +8,13 @@
       "when": 1793758785567,
       "tag": "0000_fair_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794262080179,
+      "tag": "0001_magical_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }

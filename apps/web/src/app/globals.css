@@ -1,8 +1,184 @@
 @import "tailwindcss";
 
-:root { color-scheme: light dark; }
-body { @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100; }
-.card { @apply rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900; }
-.input { @apply w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-700; }
-.btn { @apply rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900; }
-.label { @apply mb-1 block text-xs font-medium text-zinc-500; }
+/*
+ * Design system do Radar (ui-ux-pro-max: "Analytics Dashboard" + paleta E-commerce)
+ * - Data-Dense Dashboard: cards de KPI, grade, tooltips, linhas destacadas ao passar o mouse
+ * - Verde = lucro/oportunidade, laranja = atenção, vermelho = prejuízo/risco
+ * - Tema claro/escuro por classe .dark no <html> (botão na barra lateral)
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* inline: a variável da fonte (next/font) fica no <body>, então o valor é resolvido no elemento */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+
+  /* marca */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857; /* botões no claro: 5,5:1 com branco */
+  --color-brand-800: #065f46;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+}
+
+/* superfícies e texto por tema (usadas pelos componentes e pelos gráficos) */
+:root {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+  --fg: #0f172a;
+  --fg-muted: #475569; /* 7,5:1 sobre branco */
+  --chart-1: #059669;
+  --chart-2: #2563eb;
+  --chart-3: #ea580c;
+  --chart-4: #9333ea;
+  --chart-5: #64748b;
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+  --tooltip-bg: #ffffff;
+  --tooltip-fg: #0f172a;
+}
+.dark {
+  color-scheme: dark;
+  --bg: #0b0f17;
+  --surface: #111827;
+  --surface-2: #1a2232;
+  --border: #243044;
+  --fg: #f1f5f9;
+  --fg-muted: #a3b1c6; /* 7,9:1 sobre a superfície escura */
+  --chart-1: #34d399;
+  --chart-2: #60a5fa;
+  --chart-3: #fb923c;
+  --chart-4: #c084fc;
+  --chart-5: #94a3b8;
+  --chart-grid: #243044;
+  --chart-axis: #8b9ab0;
+  --tooltip-bg: #1a2232;
+  --tooltip-fg: #f1f5f9;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* filhos de grade podem encolher abaixo do conteúdo: sem isso, cards e tabelas largas
+   empurram a página e criam rolagem horizontal no celular */
+:where(.grid) > * {
+  min-width: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-feature-settings: "cv11", "ss01"; /* Inter: dígitos mais legíveis em tabelas */
+}
+.tabular-nums,
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Contraste mínimo de 4,5:1 para textos secundários nos dois temas.
+   O zinc-400 (dicas) reprova sobre branco e o zinc-500 reprova sobre o fundo escuro. */
+:root:not(.dark) .text-zinc-400 {
+  color: #64748b;
+}
+.dark .text-zinc-500,
+.dark .text-zinc-400 {
+  color: var(--fg-muted);
+}
+
+/* Foco sempre visível para quem navega pelo teclado */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border p-5 shadow-[0_1px_2px_rgb(15_23_42/0.04)];
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .card-hover {
+    @apply transition-[border-color,box-shadow] duration-150;
+  }
+  .card-hover:hover {
+    border-color: color-mix(in srgb, var(--color-brand-500) 45%, var(--border));
+    box-shadow: 0 4px 16px rgb(15 23 42 / 0.06);
+  }
+  .input {
+    @apply w-full rounded-lg border px-3 py-2 text-sm transition-colors duration-150 placeholder:text-zinc-400;
+    min-height: 40px;
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .input:hover {
+    border-color: color-mix(in srgb, var(--fg-muted) 40%, var(--border));
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-800 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-500 dark:text-zinc-950 dark:hover:bg-brand-400;
+    min-height: 40px;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+    min-height: 40px;
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-2);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors duration-150;
+    min-height: 40px;
+    color: var(--fg-muted);
+  }
+  .btn-ghost:hover {
+    background: var(--surface-2);
+    color: var(--fg);
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium;
+    color: var(--fg-muted);
+  }
+  .muted {
+    color: var(--fg-muted);
+  }
+  .surface-2 {
+    background: var(--surface-2);
+  }
+  .divider {
+    border-color: var(--border);
+  }
+  /* linhas de tabela destacadas ao passar o mouse (padrão data-dense) */
+  .table-rows tbody tr {
+    @apply transition-colors duration-100;
+  }
+  .table-rows tbody tr:hover {
+    background: var(--surface-2);
+  }
+}

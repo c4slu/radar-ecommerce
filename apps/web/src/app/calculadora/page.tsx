@@ -1,4 +1,6 @@
 import { eq } from "drizzle-orm";
+import { Calculator } from "lucide-react";
+import { PageHeader } from "@/components/ui";
 import { quoteLandedCost } from "@radar/core";
 import { getDb, products, supplierQuotes } from "@radar/db";
 import { DEFAULT_FEES, loadCalcProduct, loadFees, parseCatalogId, type CalcFees, type CalcProduct } from "@/lib/calculator-data";
@@ -39,14 +41,21 @@ export default async function CalculadoraPage({ searchParams }: { searchParams: 
   const radar = sp.radar ? await radarCost(sp.radar).catch(() => null) : null;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Calculadora de lucro</h1>
-        <p className="text-sm text-zinc-500">
-          Quanto sobra por unidade vendida no Mercado Livre, e o risco do lote que você pretende comprar.
-          {radar && <> Custo carregado de <strong>{radar.name}</strong>.</>}
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        icon={Calculator}
+        title="Calculadora de lucro"
+        subtitle={
+          <>
+            Quanto sobra por unidade vendida no Mercado Livre, e o risco do lote que você pretende comprar.
+            {radar && (
+              <>
+                {" "}Custo carregado de <strong>{radar.name}</strong>.
+              </>
+            )}
+          </>
+        }
+      />
       <ProfitCalculator
         initialProduct={product}
         initialFees={fees}

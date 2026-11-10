@@ -1,3 +1,4 @@
+import { Boxes } from "lucide-react";
 import Link from "next/link";
 import { asc, desc, eq, ne } from "drizzle-orm";
 import { getDb, products, stockMovements, suppliers } from "@radar/db";
@@ -39,7 +40,7 @@ export default async function StockPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Estoque" subtitle={`${num(totalUnits)} unidades · ${brl(totalValue)} em estoque (a custo)`} />
+      <PageHeader icon={Boxes} title="Estoque" subtitle={`${num(totalUnits)} unidades · ${brl(totalValue)} em estoque (a custo)`} />
 
       <div className="card overflow-x-auto p-0">
         {rows.length === 0 ? (
@@ -47,7 +48,7 @@ export default async function StockPage() {
             Cadastre um <Link href="/produtos/novo" className="underline">produto</Link> para controlar o estoque.
           </EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead className="border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <Th>Produto</Th>
@@ -152,7 +153,7 @@ export default async function StockPage() {
         {movements.length === 0 ? (
           <EmptyState>Nenhuma movimentação ainda.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Data</Th>

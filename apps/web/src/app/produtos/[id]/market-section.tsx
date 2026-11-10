@@ -102,7 +102,7 @@ export async function MarketSection({
 
       {listings.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Concorrente (mais baratos)</Th>

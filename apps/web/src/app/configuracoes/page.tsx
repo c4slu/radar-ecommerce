@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import { asc, desc } from "drizzle-orm";
 import { fxRates, getDb, marketplaceFees } from "@radar/db";
 import { ActionForm, DeleteButton } from "@/components/action-form";
@@ -30,7 +31,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Configurações" subtitle="Parâmetros usados nos cálculos de margem e risco." />
+      <PageHeader icon={Settings} title="Configurações" subtitle="Parâmetros usados nos cálculos de margem e risco." />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="card">
@@ -66,9 +67,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
         <div className="space-y-6">
           <MlCard status={ml} detail={detalhe} />
-          <div className="card">
+          <div className="card overflow-x-auto">
             <h2 className="mb-3 font-medium">Integrações (.env)</h2>
-            <table className="w-full text-sm">
+            <table className="table-rows w-full text-sm">
               <tbody>
                 {INTEGRATIONS.map((i) => {
                   const missing = i.vars.filter((v) => !process.env[v]);
@@ -90,7 +91,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             {fx.length === 0 ? (
               <EmptyState>Nenhuma cotação. Rode o job collect-fx.</EmptyState>
             ) : (
-              <table className="w-full text-sm">
+              <table className="table-rows w-full text-sm">
                 <tbody>
                   {fx.map((r) => (
                     <tr key={r.id} className="border-t border-zinc-100 first:border-0 dark:border-zinc-800">
@@ -117,7 +118,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         {fees.length === 0 ? (
           <EmptyState>Nenhuma tarifa cadastrada.</EmptyState>
         ) : (
-          <table className="mb-6 w-full text-sm">
+          <table className="table-rows mb-6 w-full text-sm">
             <thead>
               <tr>
                 <Th>Marketplace</Th>

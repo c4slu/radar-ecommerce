@@ -1,3 +1,4 @@
+import { Truck } from "lucide-react";
 import Link from "next/link";
 import { asc, count, eq } from "drizzle-orm";
 import { getDb, supplierQuotes, suppliers } from "@radar/db";
@@ -18,7 +19,7 @@ export default async function SuppliersPage() {
   return (
     <>
       <PageHeader
-        title="Fornecedores"
+        icon={Truck} title="Fornecedores"
         subtitle="Cadastre quem vende para você e compare as cotações por produto."
         action={<LinkButton href="/fornecedores/novo">Novo fornecedor</LinkButton>}
       />
@@ -26,7 +27,7 @@ export default async function SuppliersPage() {
         {rows.length === 0 ? (
           <EmptyState>Nenhum fornecedor ainda.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead className="border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <Th>Nome</Th>

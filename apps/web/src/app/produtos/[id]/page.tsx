@@ -103,7 +103,7 @@ export default async function ProductPage({
               : `Base: ${brl(refCost)} (${refLabel}), imposto ${pct(settings.taxPct)}, margem alvo ${pct(settings.targetMargin)}. Frete por sua conta não incluído.`}
           </p>
           {refCost != null && (
-            <table className="w-full text-sm">
+            <table className="table-rows w-full text-sm">
               <thead>
                 <tr>
                   <Th>Marketplace</Th>
@@ -176,7 +176,7 @@ export default async function ProductPage({
         {quotes.length === 0 ? (
           <EmptyState>Nenhuma cotação ainda.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Fornecedor</Th>

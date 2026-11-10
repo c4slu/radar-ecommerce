@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Zap } from "lucide-react";
 import { calculateProfit, computeRisk, parseLocaleNumber, priceForTargetMargin, type ProfitInput } from "@radar/core";
 import type { CalcFees, CalcProduct } from "@/lib/calculator-data";
 import { fetchCalcProduct, fetchFees } from "./actions";
@@ -138,8 +139,8 @@ export function ProfitCalculator({
                   <a href={product.permalink} target="_blank" rel="noreferrer" className="line-clamp-2 text-sm font-medium hover:underline">
                     {product.name}
                   </a>
-                  <div className="mt-1 flex flex-wrap gap-1.5 text-[11px]">
-                    {product.fullShare > 0 && <Chip tone="emerald">⚡ FULL {pctFmt(product.fullShare, 0)}</Chip>}
+                  <div className="mt-1 flex flex-wrap gap-1.5 text-xs">
+                    {product.fullShare > 0 && <Chip tone="emerald"><Zap className="-mt-px mr-0.5 inline h-3 w-3" aria-hidden />FULL {pctFmt(product.fullShare, 0)}</Chip>}
                     <Chip>{product.listings} anúncios</Chip>
                     {product.ageDays != null && <Chip>{product.ageDays}d no catálogo</Chip>}
                   </div>
@@ -189,8 +190,8 @@ export function ProfitCalculator({
               { value: "premium", label: `Premium (${pctFmt(fees.premium.pct, 1)})` },
             ]}
           />
-          {fees.source === "padrao" && <p className="-mt-2 text-[11px] text-zinc-400">Tarifa padrão; carregue um produto para usar a tarifa oficial da categoria.</p>}
-          {fees[type].fixed > 0 && <p className="-mt-2 text-[11px] text-zinc-500">Inclui tarifa fixa de {brl(fees[type].fixed)} por venda nesta faixa de preço.</p>}
+          {fees.source === "padrao" && <p className="-mt-2 text-xs text-zinc-400">Tarifa padrão; carregue um produto para usar a tarifa oficial da categoria.</p>}
+          {fees[type].fixed > 0 && <p className="-mt-2 text-xs text-zinc-500">Inclui tarifa fixa de {brl(fees[type].fixed)} por venda nesta faixa de preço.</p>}
           <Segmented
             label="Envio"
             value={ship}
@@ -205,7 +206,7 @@ export function ProfitCalculator({
             <MoneyField label="Custo de envio / un" value={shipCost[ship]} onChange={(v) => setShipCost((s) => ({ ...s, [ship]: v }))} />
             {ship === "full" && <MoneyField label="Armazenagem / un" value={storage} onChange={setStorage} />}
           </div>
-          <p className="-mt-2 text-[11px] text-zinc-500">
+          <p className="-mt-2 text-xs text-zinc-500">
             {SHIP_HINT[ship]}
             {n(price) >= 79 && !n(shipCost[ship]) && <span className="text-amber-600"> Preço acima de R$ 79: informe o custo do frete grátis.</span>}
           </p>
@@ -396,7 +397,7 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 py-2.5">
-      <div className="text-[10px] uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-zinc-500">{label}</div>
       <div className="font-semibold">{value}</div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { and, desc, eq } from "drizzle-orm";
 import { parseLocaleNumber } from "@radar/core";
@@ -68,7 +69,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Oportunidades"
+        icon={Sparkles} title="Oportunidades"
         subtitle="Produtos entre os mais vendidos do Mercado Livre com poucos anúncios concorrentes."
       />
 
@@ -159,14 +160,14 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
             </div>
           </form>
 
-          <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
-            <div>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="min-w-0">
               {shown.length === 0 ? (
                 <div className="card">
                   <EmptyState>Nenhum produto com esses filtros. Experimente aumentar o máximo de anúncios ou a faixa de preço.</EmptyState>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
                   {shown.map((o) => (
                     <OpportunityCard key={o.id} o={o} />
                   ))}
@@ -194,7 +195,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                     </li>
                   ))}
                 </ul>
-                <p className="mt-2 text-[11px] text-zinc-400">fortes / produtos no ranking</p>
+                <p className="mt-2 text-xs text-zinc-400">fortes / produtos no ranking</p>
               </div>
               <div className="card">
                 <h2 className="mb-3 text-sm font-medium">Buscas em alta no ML</h2>
@@ -221,7 +222,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 function OpportunityCard({ o }: { o: Opportunity }) {
   const r = o.result;
   return (
-    <div className="card flex flex-col gap-3 p-4">
+    <div className="card card-hover flex flex-col gap-3 p-4">
       <div className="flex gap-3">
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white">
           {o.pictureUrl ? (
@@ -260,11 +261,11 @@ function OpportunityCard({ o }: { o: Opportunity }) {
       </div>
 
       <div className="mt-auto flex items-center gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-        <Link href={`/calculadora?produto=${o.id}`} className="btn px-3 py-1.5 text-xs">
+        <Link href={`/calculadora?produto=${o.id}`} className="btn">
           Calcular
         </Link>
         <form action={trackOpportunity.bind(null, o.id)}>
-          <SubmitButton label="Acompanhar" />
+          <SubmitButton label="Acompanhar" variant="secondary" />
         </form>
         {o.permalink && (
           <a href={o.permalink} target="_blank" rel="noreferrer" className="ml-auto text-xs text-zinc-500 hover:underline">
@@ -279,7 +280,7 @@ function OpportunityCard({ o }: { o: Opportunity }) {
 function Stat({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wide text-zinc-400">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-zinc-400">{label}</div>
       <div className={`font-medium ${strong ? "text-emerald-600" : ""}`}>{value}</div>
     </div>
   );

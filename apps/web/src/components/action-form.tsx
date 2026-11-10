@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
+import { Loader2, Trash2 } from "lucide-react";
 import type { ActionState } from "@/lib/forms";
 
 type Action = (prev: ActionState, fd: FormData) => Promise<ActionState>;
@@ -46,11 +47,12 @@ export function ActionForm({
   );
 }
 
-export function SubmitButton({ label, pending: pendingProp }: { label: string; pending?: boolean }) {
+export function SubmitButton({ label, pending: pendingProp, variant = "primary" }: { label: string; pending?: boolean; variant?: "primary" | "secondary" }) {
   const { pending: formPending } = useFormStatus();
   const pending = pendingProp ?? formPending;
   return (
-    <button className="btn disabled:opacity-50" disabled={pending}>
+    <button className={variant === "primary" ? "btn" : "btn-secondary"} disabled={pending}>
+      {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
       {pending ? "Salvando..." : label}
     </button>
   );
@@ -65,7 +67,10 @@ export function DeleteButton({ action, label = "Excluir", confirmText = "Tem cer
         if (!confirm(confirmText)) e.preventDefault();
       }}
     >
-      <button className="text-xs text-red-600 hover:underline">{label}</button>
+      <button className="btn-ghost h-9 min-h-9 px-2.5 text-xs text-red-700 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300">
+        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+        {label}
+      </button>
     </form>
   );
 }

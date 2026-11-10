@@ -1,50 +1,43 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import { AppShell, type EnvBadge } from "@/components/app-shell";
+import { THEME_SCRIPT } from "@/components/theme-toggle";
+import { supabaseConfigured } from "@/lib/supabase/server";
+import { signOut } from "./login/actions";
 import "./globals.css";
 
-export const metadata: Metadata = { title: "Radar", description: "Fornecedores, estoque e risco de mercado" };
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
-const NAV = [
-  { href: "/", label: "Dashboard" },
-  { href: "/oportunidades", label: "Oportunidades" },
-  { href: "/calculadora", label: "Calculadora" },
-  { href: "/produtos", label: "Produtos" },
-  { href: "/fornecedores", label: "Fornecedores" },
-  { href: "/estoque", label: "Estoque" },
-  { href: "/pesquisa", label: "Pesquisa de mercado" },
-  { href: "/configuracoes", label: "Configurações" },
-];
+export const metadata: Metadata = { title: "Radar", description: "Oportunidades, fornecedores, estoque e lucro no Mercado Livre" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f17" },
+  ],
+};
 
 /** Em qual banco o app está: evita confundir desenvolvimento com produção. */
-function envBadge() {
+function envBadge(): EnvBadge | null {
   if (process.env.VERCEL) return null;
-  if (process.env.RADAR_DEV_ON_PROD === "1")
-    return { label: "ATENÇÃO: .env.local aponta para o banco de PRODUÇÃO", cls: "bg-red-600 text-white" };
-  if (process.env.RADAR_ENV === "dev") return { label: "DEV", cls: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300" };
-  return { label: "LOCAL • banco de produção", cls: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300" };
+  if (process.env.RADAR_DEV_ON_PROD === "1") return { label: "ATENÇÃO: .env.local aponta para o banco de PRODUÇÃO", tone: "danger" };
+  if (process.env.RADAR_ENV === "dev") return { label: "Ambiente DEV", tone: "info" };
+  return { label: "LOCAL • banco de produção", tone: "danger" };
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const env = envBadge();
   return (
-    <html lang="pt-BR">
-      <body className="min-h-screen antialiased">
-        <div className="flex">
-          <aside className="sticky top-0 hidden h-screen w-56 shrink-0 border-r border-zinc-200 p-4 md:block dark:border-zinc-800">
-            <div className="mb-6">
-              <div className="text-lg font-semibold">Radar</div>
-              {env && <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${env.cls}`}>{env.label}</span>}
-            </div>
-            <nav className="space-y-1 text-sm">
-              {NAV.map((n) => (
-                <Link key={n.label} href={n.href} className="block rounded px-2 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-          <main className="flex-1 p-6">{children}</main>
-        </div>
+    // o <html> fica sem className controlado pelo React: a classe .dark é do script/botão de tema
+    // (se o React controlasse o className, um re-render apagaria o tema escolhido)
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body className={`${inter.variable} min-h-screen font-sans antialiased`}>
+        <AppShell env={envBadge()} signOut={signOut} showSignOut={supabaseConfigured()}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

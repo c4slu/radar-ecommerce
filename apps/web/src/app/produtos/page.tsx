@@ -1,3 +1,4 @@
+import { Package } from "lucide-react";
 import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { quoteLandedCost } from "@radar/core";
@@ -28,7 +29,7 @@ export default async function ProductsPage() {
   return (
     <>
       <PageHeader
-        title="Produtos"
+        icon={Package} title="Produtos"
         subtitle="Do produto em pesquisa até o que está vendendo."
         action={<LinkButton href="/produtos/novo">Novo produto</LinkButton>}
       />
@@ -36,7 +37,7 @@ export default async function ProductsPage() {
         {rows.length === 0 ? (
           <EmptyState>Nenhum produto ainda.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead className="border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <Th>SKU</Th>

@@ -45,7 +45,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
             Nenhuma cotação. Adicione pela página de um <Link href="/produtos" className="underline">produto</Link>.
           </EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Produto</Th>

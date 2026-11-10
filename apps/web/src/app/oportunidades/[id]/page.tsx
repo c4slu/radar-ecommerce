@@ -63,7 +63,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
               Calcular lucro
             </Link>
             <form action={trackOpportunity.bind(null, id)}>
-              <SubmitButton label="Acompanhar" />
+              <SubmitButton label="Acompanhar" variant="secondary" />
             </form>
           </div>
         }
@@ -138,7 +138,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
         {offers.length === 0 ? (
           <EmptyState>Sem anúncios lidos.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Vendedor</Th>
@@ -164,7 +164,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
             </tbody>
           </table>
         )}
-        <p className="mt-2 text-[11px] text-zinc-400">O ML não libera nome nem vendas de cada vendedor para esta aplicação; aparece o ID.</p>
+        <p className="mt-2 text-xs text-zinc-400">O ML não libera nome nem vendas de cada vendedor para esta aplicação; aparece o ID.</p>
       </div>
     </div>
   );
@@ -185,7 +185,7 @@ function Part({ label, v }: { label: string; v: number }) {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="card p-3">
-      <div className="text-[10px] uppercase tracking-wide text-zinc-400">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-zinc-400">{label}</div>
       <div className="font-semibold">{value}</div>
     </div>
   );

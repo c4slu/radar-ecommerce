@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { computeRisk, parseLocaleNumber } from "@radar/core";
@@ -38,7 +39,7 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pesquisa de mercado" subtitle="Veja concorrentes, faixa de preço e risco na Shopee e no Mercado Livre antes de cotar um produto." />
+      <PageHeader icon={Search} title="Pesquisa de mercado" subtitle="Veja concorrentes, faixa de preço e risco na Shopee e no Mercado Livre antes de cotar um produto." />
 
       <form className="card grid gap-3 sm:grid-cols-[150px_1fr_140px_110px_140px_auto] sm:items-end">
         <label className="block">
@@ -224,7 +225,7 @@ async function Results({
             Cria um produto em pesquisa com o termo <strong>{q}</strong>, coleta os concorrentes agora nos marketplaces configurados e passa a monitorar a cada 6 horas.
           </p>
           <form action={trackTerm.bind(null, q, topCategory)}>
-            <SubmitButton label="Acompanhar" />
+            <SubmitButton label="Acompanhar" variant="secondary" />
           </form>
           <p className="text-xs text-zinc-400">
             Fonte: {MARKETPLACE_NAME[result.marketplace]} ({result.source === "search" ? "busca" : result.source === "catalog" ? "catálogo" : "API de afiliados"})
@@ -238,7 +239,7 @@ async function Results({
         {sorted.length === 0 ? (
           <EmptyState>Nenhum anúncio encontrado.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table-rows w-full text-sm">
             <thead>
               <tr>
                 <Th>Anúncio</Th>

@@ -58,15 +58,20 @@ export function TrendLines({
   data,
   series,
   label,
-  format,
+  decimals,
   height = 220,
 }: {
   data: Record<string, string | number | null>[];
   series: { key: string; name: string; color: string; axis?: "left" | "right" }[];
   label: string;
-  format?: (v: number) => string;
+  /** casas decimais fixas nos eixos e no tooltip; número (e não função) para poder vir de um Server Component */
+  decimals?: number;
   height?: number;
 }) {
+  const format =
+    decimals == null
+      ? undefined
+      : (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   const hasRight = series.some((s) => s.axis === "right");
   return (
     <div role="img" aria-label={label} style={{ height }}>

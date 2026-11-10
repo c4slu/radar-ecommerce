@@ -259,7 +259,7 @@ export default async function Dashboard() {
                 <TrendLines
                   data={d.fx}
                   label="Cotação do dólar e do yuan em reais nos últimos 45 dias"
-                  format={(v) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  decimals={2}
                   series={[
                     { key: "usd", name: "Dólar (R$)", color: "var(--chart-2)", axis: "left" },
                     { key: "cny", name: "Yuan (R$)", color: "var(--chart-3)", axis: "right" },

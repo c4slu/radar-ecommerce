@@ -7,13 +7,15 @@
     "fx": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/fx.ts",
     "ml": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/ml.ts",
     "shopee": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/shopee.ts",
-    "opportunities": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/opportunities.ts"
+    "opportunities": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/opportunities.ts",
+    "feeds": "tsx --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local src/feeds.ts"
   },
   "dependencies": {
     "@radar/core": "^0.1.0",
     "@radar/db": "^0.1.0",
     "@radar/ml": "^0.1.0",
     "@radar/shopee": "^0.1.0",
+    "@radar/suppliers": "^0.1.0",
     "drizzle-orm": "^0.45.4"
   }
 }

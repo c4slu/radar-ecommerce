@@ -78,6 +78,15 @@ export const supplierQuotes = pgTable(
     validUntil: date("valid_until"),
     quotedAt: date("quoted_at").notNull().defaultNow(),
     notes: text("notes"),
+    /** manual | cj | aliexpress | <fornecedor nacional> */
+    source: text("source").notNull().default("manual"),
+    externalId: text("external_id"),
+    url: text("url"),
+    imageUrl: text("image_url"),
+    /** país de onde a oferta é enviada (ISO) */
+    shipFrom: text("ship_from"),
+    stock: integer("stock"),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index("supplier_quotes_product_idx").on(t.productId)],
@@ -347,4 +356,68 @@ export const mlFeeCache = pgTable(
     fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("ml_fee_cache_unique").on(t.categoryId, t.priceBucket, t.listingTypeId)],
+);
+
+/** Produto do catálogo do ML ligado à melhor oferta de fornecedor (estimada ou confirmada pelo usuário). */
+export const mlSupplierMatches = pgTable(
+  "ml_supplier_matches",
+  {
+    id: id(),
+    catalogProductId: text("catalog_product_id").notNull(),
+    source: text("source").notNull(),
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    imageUrl: text("image_url"),
+    url: text("url"),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 4, mode: "number" }).notNull(),
+    currency: text("currency").notNull(),
+    shipFrom: text("ship_from"),
+    /** custo final por unidade em R$ no momento da busca (null = importado no modo só nacional) */
+    landedCost: money("landed_cost"),
+    matchScore: smallint("match_score").notNull(),
+    /** termo usado na busca (útil quando o usuário pesquisou em inglês) */
+    query: text("query"),
+    /** true = o usuário confirmou que é o mesmo produto */
+    confirmed: boolean("confirmed").notNull().default(false),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("ml_supplier_matches_unique").on(t.catalogProductId, t.source, t.externalId)],
+);
+
+// ---------- Catálogos de fornecedores nacionais (XML/CSV) ----------
+
+export const supplierFeeds = pgTable("supplier_feeds", {
+  id: id(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  itemCount: integer("item_count"),
+  lastError: text("last_error"),
+  createdAt: createdAt(),
+});
+
+export const supplierFeedItems = pgTable(
+  "supplier_feed_items",
+  {
+    id: id(),
+    feedId: uuid("feed_id")
+      .notNull()
+      .references(() => supplierFeeds.id, { onDelete: "cascade" }),
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    price: money("price").notNull(),
+    salePrice: money("sale_price"),
+    stock: integer("stock"),
+    available: boolean("available").notNull().default(true),
+    imageUrl: text("image_url"),
+    url: text("url"),
+    brand: text("brand"),
+    model: text("model"),
+    gtin: text("gtin"),
+    /** título + marca + modelo normalizados (minúsculas, sem acento) para a busca */
+    searchText: text("search_text").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("supplier_feed_items_unique").on(t.feedId, t.externalId), index("supplier_feed_items_feed_idx").on(t.feedId)],
 );

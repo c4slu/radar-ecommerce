@@ -149,7 +149,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
             </thead>
             <tbody>
               {offers.map((o, i) => (
-                <tr key={`${o.s}-${i}`} className="border-t border-zinc-100 dark:border-zinc-800">
+                <tr key={`${o.s}-${i}`} className="border-t border-[var(--border)]">
                   <Td className="font-mono text-xs text-zinc-500">{o.s ?? "-"}</Td>
                   <Td right>{brl(o.p)}</Td>
                   <Td>{LISTING_TYPE[o.t] ?? o.t}</Td>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { quoteLandedCost } from "@radar/core";
 import { getDb, products, supplierQuotes } from "@radar/db";
-import { Badge, EmptyState, LinkButton, PageHeader, STATUS_TONE, Td, Th } from "@/components/ui";
+import { Badge, EmptyState, LinkButton, PageHeader, STATUS_LABEL, STATUS_TONE, Td, Th } from "@/components/ui";
 import { getLatestFx } from "@/lib/data";
 import { brl, num } from "@/lib/format";
 import { EMPTY_STOCK, getStockSummaries } from "@/lib/stock";
@@ -38,7 +38,7 @@ export default async function ProductsPage() {
           <EmptyState>Nenhum produto ainda.</EmptyState>
         ) : (
           <table className="table-rows w-full text-sm">
-            <thead className="border-b border-zinc-200 dark:border-zinc-800">
+            <thead className="border-b border-[var(--border)]">
               <tr>
                 <Th>SKU</Th>
                 <Th>Nome</Th>
@@ -61,7 +61,7 @@ export default async function ProductsPage() {
                       </Link>
                     </Td>
                     <Td>
-                      <Badge tone={STATUS_TONE[p.status]}>{p.status}</Badge>
+                      <Badge tone={STATUS_TONE[p.status]}>{STATUS_LABEL[p.status]}</Badge>
                     </Td>
                     <Td className="text-zinc-500">{p.category ?? "-"}</Td>
                     <Td right>{brl(bestCost.get(p.id))}</Td>

@@ -30,7 +30,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   };
 
   const isDark = theme === "dark";
-  const label = isDark ? "Mudar para o tema claro" : "Mudar para o tema escuro";
+  const label = theme == null ? "Alternar tema claro/escuro" : isDark ? "Mudar para o tema claro" : "Mudar para o tema escuro";
   return (
     <button
       type="button"
@@ -41,7 +41,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     >
       {/* antes de montar não sabemos o tema: reserva o espaço do ícone para não deslocar o layout */}
       {theme == null ? <span className="h-4 w-4" /> : isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
-      {!compact && <span>{isDark ? "Tema claro" : "Tema escuro"}</span>}
+      {!compact && <span>{theme == null ? "Tema" : isDark ? "Tema claro" : "Tema escuro"}</span>}
     </button>
   );
 }

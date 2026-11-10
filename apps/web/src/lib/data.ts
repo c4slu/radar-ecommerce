@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, gte, isNull, lte, or } from "drizzle-orm";
 import { fxRates, getDb, marketplaceFees, settings } from "@radar/db";
-import { DEFAULT_WEIGHTS, type FeeRule, type RiskWeights } from "@radar/core";
+import { DEFAULT_WEIGHTS, type FeeRule, type RiskWeights, type SourcingMode } from "@radar/core";
 
 export interface AppSettings {
   taxPct: number;
@@ -14,6 +14,8 @@ export interface AppSettings {
   oppPriceMin: number;
   oppPriceMax: number;
   oppMaxListings: number;
+  /** "nacional": custo automático só com ofertas enviadas do Brasil */
+  sourcingMode: SourcingMode;
 }
 
 const DEFAULTS: AppSettings = {
@@ -26,6 +28,7 @@ const DEFAULTS: AppSettings = {
   oppPriceMin: 30,
   oppPriceMax: 300,
   oppMaxListings: 5,
+  sourcingMode: "nacional",
 };
 
 const KEY_MAP: Record<string, keyof AppSettings> = {
@@ -38,6 +41,7 @@ const KEY_MAP: Record<string, keyof AppSettings> = {
   opp_price_min: "oppPriceMin",
   opp_price_max: "oppPriceMax",
   opp_max_listings: "oppMaxListings",
+  sourcing_mode: "sourcingMode",
 };
 export const SETTINGS_KEYS = Object.fromEntries(Object.entries(KEY_MAP).map(([k, v]) => [v, k])) as Record<
   keyof AppSettings,

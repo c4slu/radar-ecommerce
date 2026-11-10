@@ -4,7 +4,8 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getDb, products, supplierQuotes } from "@radar/db";
+import { getDb, products, supplierQuotes, suppliers } from "@radar/db";
+import type { RankedOffer } from "@radar/suppliers";
 import { requireUser } from "@/lib/auth";
 import { firstError, formObject, zIntOpt, zNum, zNumOpt, type ActionState } from "@/lib/forms";
 
@@ -103,4 +104,35 @@ export async function collectNow(productId: string, _prev: ActionState, _fd: For
     return { error: "Nenhum marketplace configurado: conecte o Mercado Livre ou configure a Shopee em Configurações." };
   const text = lines.map((l) => `${l.mp}: ${l.text}`).join(" · ");
   return lines.some((l) => l.ok) ? { ok: text } : { error: text };
+}
+
+/** Cria (se preciso) o fornecedor da oferta e grava a cotação vinda da busca de fornecedores. */
+export async function addQuoteFromOffer(productId: string, offer: RankedOffer): Promise<string> {
+  await requireUser();
+  const db = getDb();
+  const name = offer.sourceName;
+  let [supplier] = await db.select({ id: suppliers.id }).from(suppliers).where(eq(suppliers.name, name)).limit(1);
+  if (!supplier) {
+    [supplier] = await db
+      .insert(suppliers)
+      .values({ name, channel: offer.shipFrom === "BR" ? "nacional" : "importacao", notes: "Criado pela busca de fornecedores" })
+      .returning({ id: suppliers.id });
+  }
+  await db.insert(supplierQuotes).values({
+    productId,
+    supplierId: supplier!.id,
+    unitPrice: offer.unitPrice,
+    currency: offer.currency,
+    minQty: offer.moq ?? undefined,
+    source: offer.source,
+    externalId: offer.externalId,
+    url: offer.url,
+    imageUrl: offer.imageUrl,
+    shipFrom: offer.shipFrom,
+    stock: offer.stock,
+    fetchedAt: new Date(),
+    notes: `${offer.title} (${offer.matchScore}% parecido)`,
+  });
+  revalidatePath(`/produtos/${productId}`);
+  return "Cotação adicionada";
 }

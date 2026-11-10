@@ -251,7 +251,7 @@ async function Results({
             </thead>
             <tbody>
               {sorted.map((l) => (
-                <tr key={l.externalId} className="border-t border-zinc-100 dark:border-zinc-800">
+                <tr key={l.externalId} className="border-t border-[var(--border)]">
                   <Td>
                     {l.url ? (
                       <a href={l.url} target="_blank" rel="noreferrer" className="hover:underline">

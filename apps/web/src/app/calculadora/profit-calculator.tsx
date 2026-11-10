@@ -5,6 +5,7 @@ import { Zap } from "lucide-react";
 import { calculateProfit, computeRisk, parseLocaleNumber, priceForTargetMargin, type ProfitInput } from "@radar/core";
 import type { CalcFees, CalcProduct } from "@/lib/calculator-data";
 import { fetchCalcProduct, fetchFees } from "./actions";
+import { SupplierPanel } from "./supplier-panel";
 
 type ListingType = "classico" | "premium";
 type ShipMode = "coleta" | "flex" | "full";
@@ -29,12 +30,15 @@ export function ProfitCalculator({
   initialCost,
   loadError,
   settings,
+  supplierMatch,
 }: {
   initialProduct: CalcProduct | null;
   initialFees: CalcFees;
   initialCost: number | null;
   loadError: string | null;
   settings: { expectedShare: number; targetMargin: number; maxDaysToSell: number; coverageDays: number };
+  /** fornecedor já vinculado a este produto do catálogo (confirmado ou estimado) */
+  supplierMatch?: { externalId: string; title: string; landedCost: number | null; confirmed: boolean } | null;
 }) {
   const [product, setProduct] = useState(initialProduct);
   const [fees, setFees] = useState(initialFees);
@@ -43,7 +47,9 @@ export function ProfitCalculator({
   const [pending, start] = useTransition();
 
   const [price, setPrice] = useState(money(initialProduct?.priceMedian ?? initialProduct?.priceMin) || "");
-  const [cost, setCost] = useState(money(initialCost) || "");
+  const autoCost = initialCost ?? (supplierMatch?.confirmed ? supplierMatch.landedCost : null);
+  const [cost, setCost] = useState(money(autoCost) || "");
+  const [costFrom, setCostFrom] = useState<string | null>(initialCost == null && supplierMatch?.confirmed && supplierMatch.landedCost != null ? supplierMatch.title : null);
   const [type, setType] = useState<ListingType>("classico");
   const [ship, setShip] = useState<ShipMode>("coleta");
   const [shipCost, setShipCost] = useState<Record<ShipMode, string>>({ coleta: "", flex: "", full: "" });
@@ -174,13 +180,35 @@ export function ProfitCalculator({
           {error && <p className="text-xs text-red-600">{error}</p>}
         </section>
 
+        {product && (
+          <SupplierPanel
+            title={product.name}
+            brand={product.brand}
+            model={product.model}
+            catalogId={product.id}
+            confirmedId={supplierMatch?.confirmed ? supplierMatch.externalId : null}
+            onUseCost={(c, o) => {
+              setCost(money(c));
+              setCostFrom(o.title);
+            }}
+          />
+        )}
+
         {/* 2. Entradas */}
         <section className="card space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <MoneyField label="Preço de venda" value={price} onChange={setPrice} onBlur={() => refreshFees(n(price))} />
-            <MoneyField label="Custo do produto" value={cost} onChange={setCost} />
+            <MoneyField
+              label="Custo do produto"
+              value={cost}
+              onChange={(v) => {
+                setCost(v);
+                setCostFrom(null);
+              }}
+            />
           </div>
-          <hr className="border-zinc-100 dark:border-zinc-800" />
+          {costFrom && <p className="muted -mt-2 line-clamp-1 text-xs">Custo do fornecedor: {costFrom}</p>}
+          <hr className="border-[var(--border)]" />
           <Segmented
             label="Tipo de anúncio"
             value={type}
@@ -269,7 +297,7 @@ export function ProfitCalculator({
             <Metric label="ROI" value={result.roi == null ? "—" : pctFmt(result.roi, 0)} />
             <Metric label="Preço mín." value={brl(result.minPrice)} />
           </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="rounded-xl border border-[var(--border)]">
             <button type="button" onClick={() => setShowDetail((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium">
               Detalhamento de custos
               <span className="text-zinc-500">
@@ -355,14 +383,15 @@ function Segmented<T extends string>({ label, value, onChange, options }: { labe
   return (
     <div>
       <div className="mb-1.5 text-sm font-medium">{label}</div>
-      <div className="flex gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
+      <div className="surface-2 flex gap-1 rounded-xl p-1" role="group" aria-label={label}>
         {options.map((o) => (
           <button
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
+            aria-pressed={value === o.value}
             className={`flex-1 rounded-lg px-2 py-2 text-xs transition sm:text-sm ${
-              value === o.value ? "bg-white font-medium shadow-sm dark:bg-zinc-950" : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+              value === o.value ? "bg-[var(--surface)] font-medium shadow-sm ring-1 ring-[var(--border)]" : "muted hover:text-[var(--fg)]"
             }`}
           >
             {o.label}
@@ -377,8 +406,8 @@ function MoneyField({ label, value, onChange, onBlur }: { label: string; value: 
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium">{label}</span>
-      <div className="flex items-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 dark:border-zinc-700 dark:bg-zinc-900">
-        <span className="text-sm text-zinc-400">R$</span>
+      <div className="money-field flex items-center rounded-xl border px-3">
+        <span className="muted text-sm">R$</span>
         <input value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} inputMode="decimal" placeholder="0,00" className="w-full bg-transparent px-2 py-2.5 text-sm outline-none" />
       </div>
     </label>

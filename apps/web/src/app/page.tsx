@@ -122,8 +122,8 @@ export default async function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="muted text-sm first-letter:uppercase">{today}</p>
           <h1 className="text-2xl font-semibold tracking-tight">{greeting()}!</h1>
+          <p className="muted mt-1 text-sm first-letter:uppercase">{today}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/oportunidades" className="btn">

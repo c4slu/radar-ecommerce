@@ -113,7 +113,7 @@ export async function MarketSection({
             </thead>
             <tbody>
               {listings.map((l) => (
-                <tr key={l.id} className="border-t border-zinc-100 dark:border-zinc-800">
+                <tr key={l.id} className="border-t border-[var(--border)]">
                   <Td>
                     {l.url ? (
                       <a href={l.url} target="_blank" rel="noreferrer" className="hover:underline">

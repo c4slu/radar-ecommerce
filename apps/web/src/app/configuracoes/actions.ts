@@ -17,6 +17,7 @@ const settingsSchema = z.object({
   oppMaxListings: zInt().refine((v) => v >= 1, "Máximo de anúncios deve ser 1 ou mais"),
   oppPriceMin: zNum().refine((v) => v >= 0, "Preço mínimo inválido"),
   oppPriceMax: zNum().refine((v) => v > 0, "Preço máximo inválido"),
+  sourcingMode: z.enum(["nacional", "importacao"]),
 }).refine((d) => d.oppPriceMax > d.oppPriceMin, "Faixa de preço: o máximo deve ser maior que o mínimo");
 
 export async function saveSettings(_prev: ActionState, fd: FormData): Promise<ActionState> {
@@ -69,5 +70,42 @@ export async function disconnectMl() {
   await requireUser();
   const { disconnect } = await import("@radar/ml");
   await disconnect();
+  revalidatePath("/configuracoes");
+}
+
+// ---------- Catálogos de fornecedores nacionais ----------
+
+const feedSchema = z.object({
+  name: z.string({ error: "Informe o nome do fornecedor" }).min(2, "Nome muito curto"),
+  url: z.url({ protocol: /^https?$/, error: "Informe o link do catálogo (http ou https)" }),
+});
+
+/** Cadastra o catálogo e já faz a primeira sincronização, para mostrar se o formato foi reconhecido. */
+export async function addFeed(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  await requireUser();
+  const parsed = feedSchema.safeParse(formObject(fd));
+  if (!parsed.success) return { error: firstError(parsed.error) };
+  const { supplierFeeds } = await import("@radar/db");
+  const { syncFeed } = await import("@radar/suppliers");
+  const [row] = await getDb().insert(supplierFeeds).values(parsed.data).returning({ id: supplierFeeds.id });
+  const r = await syncFeed(row!.id);
+  revalidatePath("/configuracoes");
+  return r.error
+    ? { error: `Catálogo salvo, mas a leitura falhou: ${r.error}` }
+    : { ok: `${r.items.toLocaleString("pt-BR")} produtos importados de ${r.name}` };
+}
+
+export async function syncFeedNow(id: string, _prev: ActionState, _fd: FormData): Promise<ActionState> {
+  await requireUser();
+  const { syncFeed } = await import("@radar/suppliers");
+  const r = await syncFeed(id);
+  revalidatePath("/configuracoes");
+  return r.error ? { error: r.error } : { ok: `${r.items.toLocaleString("pt-BR")} produtos (${r.removed} removidos)` };
+}
+
+export async function deleteFeed(id: string) {
+  await requireUser();
+  const { supplierFeeds } = await import("@radar/db");
+  await getDb().delete(supplierFeeds).where(eq(supplierFeeds.id, id));
   revalidatePath("/configuracoes");
 }

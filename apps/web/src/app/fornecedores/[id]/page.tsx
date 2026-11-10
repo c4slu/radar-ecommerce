@@ -57,7 +57,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
             </thead>
             <tbody>
               {quotes.map(({ q, product }) => (
-                <tr key={q.id} className="border-t border-zinc-100 dark:border-zinc-800">
+                <tr key={q.id} className="border-t border-[var(--border)]">
                   <Td>
                     <Link href={`/produtos/${product.id}`} className="hover:underline">
                       {product.name}

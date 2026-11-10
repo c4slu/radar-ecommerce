@@ -6,6 +6,7 @@ import { getDb, products, supplierQuotes } from "@radar/db";
 import { DEFAULT_FEES, loadCalcProduct, loadFees, parseCatalogId, type CalcFees, type CalcProduct } from "@/lib/calculator-data";
 import { getLatestFx, getSettings } from "@/lib/data";
 import { getStockSummaries } from "@/lib/stock";
+import { currentMatch } from "@/lib/suppliers";
 import { ProfitCalculator } from "./profit-calculator";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,7 @@ export default async function CalculadoraPage({ searchParams }: { searchParams: 
     }
   }
   const radar = sp.radar ? await radarCost(sp.radar).catch(() => null) : null;
+  const match = product ? await currentMatch(product.id) : null;
 
   return (
     <div>
@@ -61,6 +63,7 @@ export default async function CalculadoraPage({ searchParams }: { searchParams: 
         initialFees={fees}
         initialCost={radar?.cost ?? (sp.custo ? Number(sp.custo) : null)}
         loadError={loadError}
+        supplierMatch={match ? { externalId: match.externalId, title: match.title, landedCost: match.landedCost, confirmed: match.confirmed } : null}
         settings={{ expectedShare: settings.expectedShare, targetMargin: settings.targetMargin, maxDaysToSell: settings.maxDaysToSell, coverageDays: settings.coverageDays }}
       />
     </div>

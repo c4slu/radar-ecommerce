@@ -11,6 +11,7 @@ import { EMPTY_STOCK, getStockSummaries } from "@/lib/stock";
 import { addQuote, deleteProduct, deleteQuote, saveProduct } from "../actions";
 import { ProductForm } from "../product-form";
 import { MarketSection } from "./market-section";
+import { ProductSupplierSearch } from "./supplier-search";
 import { availableCollectors } from "@/lib/market";
 
 export const dynamic = "force-dynamic";
@@ -82,17 +83,32 @@ export default async function ProductPage({
         <Kpi label="Cobertura" value={stock.coverageDays == null ? "-" : `${Math.round(stock.coverageDays)} dias`} />
       </div>
 
-      {(["shopee", "mercadolivre"] as const).map((mp, i) => (
-        <MarketSection
-          key={mp}
-          productId={id}
-          marketplace={mp}
-          cost={refCost}
-          hasTerms={product.searchTerms.length > 0}
-          showCollect={i === 0}
-          available={avail[mp]}
-        />
-      ))}
+      {/* só marketplaces disponíveis: seção vazia de marketplace não configurado é ruído */}
+      {(["mercadolivre", "shopee"] as const)
+        .filter((mp) => avail[mp])
+        .map((mp, i) => (
+          <MarketSection
+            key={mp}
+            productId={id}
+            marketplace={mp}
+            cost={refCost}
+            hasTerms={product.searchTerms.length > 0}
+            showCollect={i === 0}
+            available
+          />
+        ))}
+      {!avail.mercadolivre && !avail.shopee && (
+        <div className="card text-sm">
+          <p className="font-medium">Concorrentes</p>
+          <p className="muted mt-1">
+            Nenhum marketplace disponível para coletar concorrentes. Conecte o Mercado Livre em{" "}
+            <Link href="/configuracoes" className="underline">
+              Configurações
+            </Link>
+            .
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="card">
@@ -116,7 +132,7 @@ export default async function ProductPage({
                   const ctx = { marketplace: m, feeRules, categoryId: product.mlCategoryId, landedCost: refCost, taxPct: settings.taxPct };
                   const hasRules = feeRules.some((r) => r.marketplace === m);
                   return (
-                    <tr key={m} className="border-t border-zinc-100 dark:border-zinc-800">
+                    <tr key={m} className="border-t border-[var(--border)]">
                       <Td>{MARKETPLACE_LABEL[m]}</Td>
                       {hasRules ? (
                         <>
@@ -143,7 +159,7 @@ export default async function ProductPage({
           <h2 className="mb-3 font-medium">Nova cotação</h2>
           {supplierList.length === 0 ? (
             <EmptyState>
-              Cadastre um <Link href="/fornecedores/novo" className="underline">fornecedor</Link> primeiro.
+              Cadastre um <Link href="/fornecedores/novo" className="underline">fornecedor</Link> ou use a busca de fornecedores abaixo, que cria a cotação em um clique.
             </EmptyState>
           ) : (
             <ActionForm action={addQuote.bind(null, id)} submitLabel="Adicionar cotação" resetOnSuccess>
@@ -171,6 +187,8 @@ export default async function ProductPage({
         </div>
       </div>
 
+      <ProductSupplierSearch productId={id} title={product.name} />
+
       <div className="card overflow-x-auto">
         <h2 className="mb-3 font-medium">Cotações ({quotes.length})</h2>
         {quotes.length === 0 ? (
@@ -194,7 +212,7 @@ export default async function ProductPage({
               {quotes.map(({ q, supplier, cost }) => {
                 const expired = q.validUntil != null && q.validUntil < new Date().toISOString().slice(0, 10);
                 return (
-                  <tr key={q.id} className={`border-t border-zinc-100 dark:border-zinc-800 ${expired ? "opacity-50" : ""}`}>
+                  <tr key={q.id} className={`border-t border-[var(--border)] ${expired ? "opacity-50" : ""}`}>
                     <Td>
                       <Link href={`/fornecedores/${supplier.id}`} className="hover:underline">
                         {supplier.name}

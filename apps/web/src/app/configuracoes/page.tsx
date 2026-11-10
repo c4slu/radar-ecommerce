@@ -2,10 +2,11 @@ import { Settings } from "lucide-react";
 import { asc, desc } from "drizzle-orm";
 import { fxRates, getDb, marketplaceFees } from "@radar/db";
 import { ActionForm, DeleteButton } from "@/components/action-form";
-import { Badge, EmptyState, Field, PageHeader, SelectField, Td, Th } from "@/components/ui";
+import { Badge, EmptyState, Field, MARKETPLACE_LABEL, PageHeader, SelectField, Td, Th } from "@/components/ui";
 import { getSettings } from "@/lib/data";
 import { brl, dateBr, num, pct } from "@/lib/format";
 import { addFee, deleteFee, saveSettings } from "./actions";
+import { FeedsCard } from "./feeds-card";
 import { MlCard } from "./ml-card";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +14,13 @@ export const dynamic = "force-dynamic";
 const pctInput = (v: number) => String(Math.round(v * 10000) / 100).replace(".", ",");
 
 const INTEGRATIONS = [
-  { name: "Supabase (login)", vars: ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "ALLOWED_EMAIL"], phase: "ativo" },
-  { name: "Banco de dados", vars: ["DATABASE_URL"], phase: "ativo" },
-  { name: "Telegram (alertas)", vars: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"], phase: "fase 3" },
-  { name: "Mercado Livre (app)", vars: ["ML_CLIENT_ID", "ML_CLIENT_SECRET"], phase: "busca bloqueada pelo ML" },
-  { name: "Shopee (afiliados)", vars: ["SHOPEE_APP_ID", "SHOPEE_APP_SECRET"], phase: "preços e vendas" },
+  { name: "Supabase (login)", vars: ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "ALLOWED_EMAIL"], phase: "em uso" },
+  { name: "Banco de dados", vars: ["DATABASE_URL"], phase: "em uso" },
+  { name: "Telegram (alertas)", vars: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"], phase: "alertas (em breve)" },
+  { name: "Mercado Livre (app)", vars: ["ML_CLIENT_ID", "ML_CLIENT_SECRET"], phase: "catálogo e oportunidades" },
+  { name: "Shopee (afiliados)", vars: ["SHOPEE_APP_ID", "SHOPEE_APP_SECRET"], phase: "aguardando acesso à Open API" },
+  { name: "CJ Dropshipping (fornecedor)", vars: ["CJ_API_KEY"], phase: "referência de preço (importação)" },
+  { name: "AliExpress (fornecedor)", vars: ["ALIEXPRESS_APP_KEY", "ALIEXPRESS_APP_SECRET"], phase: "aguardando aprovação" },
 ];
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ml?: string; detalhe?: string }> }) {
@@ -62,6 +65,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <Field label="Preço de (R$)" name="oppPriceMin" defaultValue={s.oppPriceMin} inputMode="decimal" />
               <Field label="até (R$)" name="oppPriceMax" defaultValue={s.oppPriceMax} inputMode="decimal" />
             </div>
+            <h3 className="pt-2 text-sm font-medium">Fornecedores</h3>
+            <SelectField
+              label="Modo de compra"
+              name="sourcingMode"
+              defaultValue={s.sourcingMode}
+              options={[
+                { value: "nacional", label: "Só fornecedor nacional (custo automático ignora importados)" },
+                { value: "importacao", label: "Nacional e importação" },
+              ]}
+            />
           </ActionForm>
         </div>
 
@@ -109,6 +122,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
 
+      <FeedsCard />
+
       <div className="card overflow-x-auto">
         <h2 className="mb-1 font-medium">Tarifas dos marketplaces</h2>
         <p className="mb-3 text-xs text-zinc-500">
@@ -133,8 +148,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             </thead>
             <tbody>
               {fees.map((f) => (
-                <tr key={f.id} className="border-t border-zinc-100 dark:border-zinc-800">
-                  <Td>{f.marketplace}</Td>
+                <tr key={f.id} className="border-t border-[var(--border)]">
+                  <Td>{MARKETPLACE_LABEL[f.marketplace] ?? f.marketplace}</Td>
                   <Td>{f.label ?? "-"}</Td>
                   <Td>{f.categoryId ?? "todas"}</Td>
                   <Td right>{pct(f.commissionPct, 2)}</Td>

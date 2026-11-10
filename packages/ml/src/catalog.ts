@@ -134,6 +134,9 @@ export interface CatalogProduct {
   pictureUrl: string | null;
   permalink: string;
   createdAt: Date | null;
+  /** atributos BRAND e MODEL do catálogo (o ML não informa GTIN para a aplicação) */
+  brand: string | null;
+  model: string | null;
 }
 
 export async function getCatalogProduct(id: string): Promise<CatalogProduct> {
@@ -144,7 +147,9 @@ export async function getCatalogProduct(id: string): Promise<CatalogProduct> {
     permalink?: string;
     date_created?: string;
     pictures?: { url?: string; secure_url?: string }[];
+    attributes?: { id: string; value_name?: string | null }[];
   }>(`/products/${id}`);
+  const attr = (k: string) => p.attributes?.find((a) => a.id === k)?.value_name ?? null;
   const pic = p.pictures?.[0];
   return {
     id: p.id,
@@ -153,6 +158,8 @@ export async function getCatalogProduct(id: string): Promise<CatalogProduct> {
     pictureUrl: pic?.secure_url ?? pic?.url ?? null,
     permalink: p.permalink || `https://www.mercadolivre.com.br/p/${p.id}`,
     createdAt: p.date_created ? new Date(p.date_created) : null,
+    brand: attr("BRAND"),
+    model: attr("MODEL"),
   };
 }
 

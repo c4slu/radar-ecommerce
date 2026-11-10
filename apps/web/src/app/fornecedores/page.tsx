@@ -28,7 +28,7 @@ export default async function SuppliersPage() {
           <EmptyState>Nenhum fornecedor ainda.</EmptyState>
         ) : (
           <table className="table-rows w-full text-sm">
-            <thead className="border-b border-zinc-200 dark:border-zinc-800">
+            <thead className="border-b border-[var(--border)]">
               <tr>
                 <Th>Nome</Th>
                 <Th>CNPJ</Th>

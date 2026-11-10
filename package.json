@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "npm run dev -w @radar/web",
     "build": "npm run build -w @radar/web",
-    "test": "npm run test -w @radar/core",
-    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/ml && tsc -p packages/shopee && tsc -p packages/collectors && npm run typecheck -w @radar/web",
+    "test": "npm run test -w @radar/core && npm run test -w @radar/suppliers",
+    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/ml && tsc -p packages/shopee && tsc -p packages/suppliers && tsc -p packages/collectors && npm run typecheck -w @radar/web",
     "db:generate": "npm run generate -w @radar/db",
     "db:migrate": "npm run migrate -w @radar/db",
     "collect:fx": "npm run fx -w @radar/collectors --",
@@ -17,7 +17,8 @@
     "collect:shopee": "npm run shopee -w @radar/collectors --",
     "db:setup": "npm run setup -w @radar/db",
     "dev:https": "npm run dev:https -w @radar/web",
-    "collect:opportunities": "npm run opportunities -w @radar/collectors --"
+    "collect:opportunities": "npm run opportunities -w @radar/collectors --",
+    "sync:feeds": "npm run feeds -w @radar/collectors --"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -11,6 +11,8 @@ export interface CalcProduct {
   /** dias desde a criação do produto no catálogo */
   ageDays: number | null;
   categoryId: string | null;
+  brand: string | null;
+  model: string | null;
   listings: number;
   prices: number[];
   priceMin: number | null;
@@ -45,6 +47,8 @@ export async function loadCalcProduct(id: string): Promise<CalcProduct> {
     permalink: p.permalink,
     ageDays: p.createdAt ? Math.floor((Date.now() - p.createdAt.getTime()) / 86_400_000) : null,
     categoryId: o.offers.find((x) => x.categoryId)?.categoryId ?? null,
+    brand: p.brand,
+    model: p.model,
     listings: o.total,
     prices,
     priceMin: n ? prices[0]! : null,

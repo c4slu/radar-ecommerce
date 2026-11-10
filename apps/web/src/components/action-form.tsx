@@ -14,12 +14,14 @@ export function ActionForm({
   submitLabel = "Salvar",
   resetOnSuccess = false,
   className,
+  variant = "primary",
 }: {
   action: Action;
   children: React.ReactNode;
   submitLabel?: string;
   resetOnSuccess?: boolean;
   className?: string;
+  variant?: "primary" | "secondary";
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const ref = useRef<HTMLFormElement>(null);
@@ -39,7 +41,7 @@ export function ActionForm({
     <form ref={ref} onSubmit={onSubmit} className={className ?? "space-y-4"}>
       {children}
       <div className="flex items-center gap-3">
-        <SubmitButton label={submitLabel} pending={pending} />
+        <SubmitButton label={submitLabel} pending={pending} variant={variant} />
         {state?.error && <span className="text-sm text-red-600">{state.error}</span>}
         {state?.ok && !pending && <span className="text-sm text-emerald-600">{state.ok}</span>}
       </div>

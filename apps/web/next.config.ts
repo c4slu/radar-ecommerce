@@ -18,7 +18,7 @@ const config: NextConfig = {
   // radar.localtest.me aponta para 127.0.0.1: endereço local que o Mercado Livre aceita como retorno do OAuth
   // (ele recusa "localhost"). O modo dev do Next só aceita outras origens se listadas aqui.
   allowedDevOrigins: ["radar.localtest.me"],
-  transpilePackages: ["@radar/core", "@radar/db", "@radar/ml", "@radar/shopee"],
+  transpilePackages: ["@radar/core", "@radar/db", "@radar/ml", "@radar/shopee", "@radar/suppliers"],
 };
 
 export default config;

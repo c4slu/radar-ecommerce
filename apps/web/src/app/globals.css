@@ -79,6 +79,23 @@ body {
   color: var(--fg);
   font-feature-settings: "cv11", "ss01"; /* Inter: dígitos mais legíveis em tabelas */
 }
+::selection {
+  background: color-mix(in srgb, var(--color-brand-500) 28%, transparent);
+  color: var(--fg);
+}
+input,
+textarea {
+  caret-color: var(--color-brand-600);
+}
+html {
+  scrollbar-color: color-mix(in srgb, var(--fg-muted) 45%, transparent) transparent;
+  accent-color: var(--color-brand-600);
+}
+.dark input,
+.dark textarea {
+  caret-color: var(--color-brand-400);
+}
+
 .tabular-nums,
 td {
   font-variant-numeric: tabular-nums;
@@ -161,6 +178,19 @@ td {
     background: var(--surface-2);
     color: var(--fg);
   }
+  /* campo com prefixo (R$): mesmas cores e foco do .input */
+  .money-field {
+    background: var(--surface-2);
+    border-color: var(--border);
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .money-field:focus-within {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+  }
+  .money-field input:focus-visible {
+    outline: none;
+  }
   .label {
     @apply mb-1.5 block text-xs font-medium;
     color: var(--fg-muted);
@@ -180,5 +210,11 @@ td {
   }
   .table-rows tbody tr:hover {
     background: var(--surface-2);
+  }
+  /* células com nome/link (produto, fornecedor) não encolhem a uma palavra por linha no celular:
+     a tabela rola dentro do card */
+  .table-rows td:has(> a),
+  .table-rows td:has(> span > a) {
+    min-width: 14rem;
   }
 }

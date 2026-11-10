@@ -185,3 +185,8 @@ export function Td({ children, right, className }: { children?: React.ReactNode;
 }
 
 export const STATUS_TONE = { pesquisa: "blue", aprovado: "amber", ativo: "green", descontinuado: "zinc" } as const;
+
+/** Rótulos legíveis para os valores internos (nunca mostrar "mercadolivre", "saida"...). */
+export const STATUS_LABEL = { pesquisa: "Em pesquisa", aprovado: "Aprovado", ativo: "Ativo", descontinuado: "Descontinuado" } as const;
+export const MOVEMENT_LABEL = { entrada: "Entrada", saida: "Saída", ajuste: "Ajuste" } as const;
+export const MARKETPLACE_LABEL: Record<string, string> = { mercadolivre: "Mercado Livre", shopee: "Shopee", tiktokshop: "TikTok Shop" };

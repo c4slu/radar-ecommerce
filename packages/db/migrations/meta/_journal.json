@@ -15,6 +15,20 @@
       "when": 1794262080179,
       "tag": "0001_magical_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794274033580,
+      "tag": "0002_dark_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794277935817,
+      "tag": "0003_dry_aaron_stack",
+      "breakpoints": true
     }
   ]
 }

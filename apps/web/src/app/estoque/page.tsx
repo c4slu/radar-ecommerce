@@ -3,7 +3,7 @@ import Link from "next/link";
 import { asc, desc, eq, ne } from "drizzle-orm";
 import { getDb, products, stockMovements, suppliers } from "@radar/db";
 import { ActionForm, DeleteButton } from "@/components/action-form";
-import { Badge, EmptyState, Field, PageHeader, SelectField, Td, Th } from "@/components/ui";
+import { Badge, EmptyState, Field, MARKETPLACE_LABEL, MOVEMENT_LABEL, PageHeader, SelectField, Td, Th } from "@/components/ui";
 import { brl, dateBr, num } from "@/lib/format";
 import { EMPTY_STOCK, getStockSummaries } from "@/lib/stock";
 import { addLot, addMovement, deleteMovement } from "./actions";
@@ -49,7 +49,7 @@ export default async function StockPage() {
           </EmptyState>
         ) : (
           <table className="table-rows w-full text-sm">
-            <thead className="border-b border-zinc-200 dark:border-zinc-800">
+            <thead className="border-b border-[var(--border)]">
               <tr>
                 <Th>Produto</Th>
                 <Th right>Saldo</Th>
@@ -63,7 +63,7 @@ export default async function StockPage() {
               {rows.map(({ id, name, sku, s }) => {
                 const low = s.coverageDays != null && s.coverageDays < LOW_COVERAGE_DAYS;
                 return (
-                  <tr key={id} className="border-t border-zinc-100 dark:border-zinc-800">
+                  <tr key={id} className="border-t border-[var(--border)]">
                     <Td>
                       <Link href={`/produtos/${id}`} className="font-medium hover:underline">
                         {name}
@@ -167,13 +167,13 @@ export default async function StockPage() {
             </thead>
             <tbody>
               {movements.map(({ m, product }) => (
-                <tr key={m.id} className="border-t border-zinc-100 dark:border-zinc-800">
+                <tr key={m.id} className="border-t border-[var(--border)]">
                   <Td>{dateBr(m.occurredAt)}</Td>
                   <Td>{product.name}</Td>
                   <Td>
-                    <Badge tone={TYPE_TONE[m.type]}>{m.type}</Badge>
+                    <Badge tone={TYPE_TONE[m.type]}>{MOVEMENT_LABEL[m.type]}</Badge>
                   </Td>
-                  <Td className="text-zinc-500">{m.marketplace ?? "-"}</Td>
+                  <Td className="text-zinc-500">{m.marketplace ? MARKETPLACE_LABEL[m.marketplace] : "-"}</Td>
                   <Td right className={m.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
                     {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
                   </Td>
